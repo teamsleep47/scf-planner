@@ -579,7 +579,7 @@ body.light .sync-bar{background:var(--surface2)}
   <div class="section-header">
     <div><div class="section-title">Class Calendar &amp; Schedule</div></div>
     <div class="view-toggle">
-      <button class="view-btn active" id="vbtn-week" onclick="setCalView('week')">Week</button>
+      <button class="view-btn" id="vbtn-week" onclick="setCalView('week')">Week</button>
       <button class="view-btn" id="vbtn-month" onclick="setCalView('month')">Month</button>
     </div>
   </div>
@@ -622,14 +622,14 @@ const DEFAULTS = {
     {id:'t6',name:'Spring',year:2028,isCurrent:false,notes:''}
   ],
   classes: [
-    {id:'c1',name:'Written Communication',category:'English',termId:'t1',status:'Enrolled',grade:'',credits:3,notes:'Focus on A',days:[],startTime:'',endTime:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
-    {id:'c2',name:'Humanities Elective',category:'Humanities',termId:'t1',status:'Enrolled',grade:'',credits:3,notes:''},
-    {id:'c3',name:'Anatomy & Physiology I',category:'A&P',termId:'t2',status:'Enrolled',grade:'',credits:3,notes:'HIGH PRIORITY'},
-    {id:'c4',name:'A&P I Lab',category:'A&P',termId:'t2',status:'Enrolled',grade:'',credits:1,notes:''},
-    {id:'c5',name:'American Government',category:'Government',termId:'t2',status:'Enrolled',grade:'',credits:3,notes:''},
-    {id:'c6',name:'Anatomy & Physiology II',category:'A&P',termId:'t3',status:'Not Started',grade:'',credits:3,notes:''},
-    {id:'c7',name:'A&P II Lab',category:'A&P',termId:'t3',status:'Not Started',grade:'',credits:1,notes:''},
-    {id:'c8',name:'Medical Terminology',category:'Elective',termId:'t3',status:'Not Started',grade:'',credits:3,notes:''},
+    {id:'c1',name:'Written Communication',category:'English',termId:'t1',status:'Enrolled',grade:'',credits:3,notes:'Focus on A',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
+    {id:'c2',name:'Humanities Elective',category:'Humanities',termId:'t1',status:'Enrolled',grade:'',credits:3,notes:'',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
+    {id:'c3',name:'Anatomy & Physiology I',category:'A&P',termId:'t2',status:'Enrolled',grade:'',credits:3,notes:'HIGH PRIORITY — Lecture',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
+    {id:'c4',name:'A&P I Lab',category:'A&P',termId:'t2',status:'Enrolled',grade:'',credits:1,notes:'Lab section for A&P I',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
+    {id:'c5',name:'American Government',category:'Government',termId:'t2',status:'Enrolled',grade:'',credits:3,notes:'',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
+    {id:'c6',name:'Anatomy & Physiology II',category:'A&P',termId:'t3',status:'Not Started',grade:'',credits:3,notes:'Lecture',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
+    {id:'c7',name:'A&P II Lab',category:'A&P',termId:'t3',status:'Not Started',grade:'',credits:1,notes:'Lab section for A&P II',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
+    {id:'c8',name:'Medical Terminology',category:'Elective',termId:'t3',status:'Not Started',grade:'',credits:3,notes:'',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
   ],
   prereqs: [
     {id:'p1',name:'A&P I + Lab',status:'',termId:'t2',notes:'Most important prereq'},
@@ -1296,7 +1296,7 @@ function quickAddToTerm(termId) {
 function saveNewClass() {
   const name = document.getElementById('ac-name').value.trim();
   if(!name){toast('Class name required','error');return;}
-  S.classes.push({id:uid(),name,category:document.getElementById('ac-cat').value,termId:document.getElementById('ac-term').value,status:document.getElementById('ac-status').value,grade:document.getElementById('ac-grade').value.toUpperCase(),credits:parseInt(document.getElementById('ac-credits').value),notes:document.getElementById('ac-notes').value,days:[],startTime:'',endTime:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''});
+  S.classes.push({id:uid(),name,category:document.getElementById('ac-cat').value,termId:document.getElementById('ac-term').value,status:document.getElementById('ac-status').value,grade:document.getElementById('ac-grade').value.toUpperCase(),credits:parseInt(document.getElementById('ac-credits').value),notes:document.getElementById('ac-notes').value,days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''});
   saveState(); closeModalNow(); renderPanel(activePanel); toast('Class added');
 }
 
@@ -1656,7 +1656,7 @@ function saveTargetDate() {
 // ============================================================
 // CALENDAR
 // ============================================================
-let calView = 'week';
+let calView = localStorage.getItem('scf_calview') || 'month';
 let calDate = new Date();
 
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -1665,6 +1665,7 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 
 function setCalView(v) {
   calView = v;
+  localStorage.setItem('scf_calview', v);
   document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('vbtn-'+v)?.classList.add('active');
   renderCalendar();
@@ -1673,6 +1674,9 @@ function setCalView(v) {
 function renderCalendar() {
   const el = document.getElementById('calendar-content');
   if(!el) return;
+  // sync active button to current view
+  document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('vbtn-'+calView)?.classList.add('active');
   if(calView === 'week') renderWeekView(el);
   else renderMonthView(el);
 }
@@ -1707,7 +1711,12 @@ function renderWeekView(el) {
     ${days.map(d => {
       const dayName = DAYS[d.getDay()];
       const isToday = d.toDateString() === today.toDateString();
-      const dayClasses = scheduled.filter(c => c.days && c.days.includes(dayName));
+      const dayClasses = scheduled.filter(c => {
+        if(!c.days || !c.days.includes(dayName)) return false;
+        if(c.termStartDate && d < new Date(c.termStartDate+'T00:00:00')) return false;
+        if(c.termEndDate && d > new Date(c.termEndDate+'T23:59:59')) return false;
+        return true;
+      });
       return `<div class="cal-week-day ${isToday?'today-col':''}">
         <div class="cal-week-day-header">${dayName}</div>
         <div class="cal-week-day-date" style="${isToday?'color:var(--accent);font-weight:700':''}">${d.getDate()}</div>
@@ -1734,6 +1743,7 @@ function renderWeekView(el) {
           <div class="schedule-meta">
             ${c.days&&c.days.length?c.days.map(d=>'<span class="day-pill active">'+d+'</span>').join(''):'No days set'}
             ${c.room?' · Room '+c.room:''}
+            ${(c.termStartDate||c.termEndDate)?'<div style="font-size:11px;color:var(--text3);margin-top:4px">📆 '+(c.termStartDate?new Date(c.termStartDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'?')+' → '+(c.termEndDate?new Date(c.termEndDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'?')+'</div>':''}
           </div>
           ${c.teacherName?'<div class="schedule-meta" style="margin-top:4px">👤 '+c.teacherName+(c.teacherEmail?' · '+c.teacherEmail:'')+'</div>':''}
         </div>
@@ -1768,7 +1778,13 @@ function renderMonthView(el) {
     const date = new Date(year,month,d);
     const dayName = DAYS[date.getDay()];
     const isToday = date.toDateString()===today.toDateString();
-    const dayClasses = scheduled.filter(c=>c.days&&c.days.includes(dayName));
+    const dayClasses = scheduled.filter(c=>{
+      if(!c.days||!c.days.includes(dayName)) return false;
+      // Check if this date falls within class term dates
+      if(c.termStartDate && date < new Date(c.termStartDate+'T00:00:00')) return false;
+      if(c.termEndDate && date > new Date(c.termEndDate+'T23:59:59')) return false;
+      return true;
+    });
     cells += `<div class="cal-day${isToday?' today':''}">
       <div class="cal-date">${d}</div>
       ${dayClasses.slice(0,2).map(c=>`<div class="cal-event" style="background:rgba(79,142,247,0.15);color:var(--accent)" onclick="viewClassDetail('${c.id}')">${c.name}</div>`).join('')}
@@ -1806,16 +1822,24 @@ function viewClassDetail(id) {
 
     <div class="detail-section">
       <div class="detail-section-title">📅 Schedule</div>
+      <div class="form-row">
+        <div class="form-group flex1"><label>Term Start Date</label>
+          <input type="date" id="cd-term-start" value="${c.termStartDate||''}">
+        </div>
+        <div class="form-group flex1"><label>Term End Date</label>
+          <input type="date" id="cd-term-end" value="${c.termEndDate||''}">
+        </div>
+      </div>
       <div class="form-group" style="margin-bottom:10px">
-        <label>Class Days</label>
-        <div style="margin-top:4px">${dayBtns}</div>
+        <label>Class Days (weekly recurring)</label>
+        <div style="margin-top:6px">${dayBtns}</div>
       </div>
       <div class="form-row">
-        <div class="form-group flex1"><label>Start Time</label>
-          <input type="time" id="cd-start" value="${c.startTime||''}" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:var(--r);font-size:13px">
+        <div class="form-group flex1"><label>Class Start Time</label>
+          <input type="time" id="cd-start" value="${c.startTime||''}">
         </div>
-        <div class="form-group flex1"><label>End Time</label>
-          <input type="time" id="cd-end" value="${c.endTime||''}" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:var(--r);font-size:13px">
+        <div class="form-group flex1"><label>Class End Time</label>
+          <input type="time" id="cd-end" value="${c.endTime||''}">
         </div>
       </div>
       <div class="form-group"><label>Room / Building</label>
@@ -1874,6 +1898,8 @@ function toggleDay(classId, day, btn) {
 function saveClassDetail(id) {
   const c = S.classes.find(x=>x.id===id);
   if(!c) return;
+  c.termStartDate = document.getElementById('cd-term-start').value;
+  c.termEndDate = document.getElementById('cd-term-end').value;
   c.startTime = document.getElementById('cd-start').value;
   c.endTime = document.getElementById('cd-end').value;
   c.room = document.getElementById('cd-room').value;
