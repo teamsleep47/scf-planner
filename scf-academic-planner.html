@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Academic Planner — SCF Radiography</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #181b24;
+  --surface2: #1e222e;
+  --surface3: #252a38;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8eaf0;
+  --text2: #8b90a0;
+  --text3: #555a6a;
+  --accent: #4f8ef7;
+  --accent2: #3a6fd8;
+  --green: #3ecf8e;
+  --green-dim: rgba(62,207,142,0.12);
+  --amber: #f5a623;
+  --amber-dim: rgba(245,166,35,0.12);
+  --red: #f06060;
+  --red-dim: rgba(240,96,96,0.12);
+  --purple: #a78bfa;
+  --purple-dim: rgba(167,139,250,0.12);
+  --cyan: #38bdf8;
+  --cyan-dim: rgba(56,189,248,0.12);
+  --r: 8px;
+  --r-lg: 12px;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
+
+/* Layout */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:0}
+
+/* Sidebar */
+.sidebar-logo{padding:20px 16px 8px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.logo-title{font-size:13px;font-weight:600;color:var(--text);letter-spacing:0.02em}
+.logo-sub{font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;border-radius:0;font-size:13px;color:var(--text2);transition:all 0.15s;border:none;background:none;width:100%;text-align:left;position:relative}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:var(--accent);background:rgba(79,142,247,0.08)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent)}
+.nav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--surface3);color:var(--text2);font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:99px;min-width:18px;text-align:center}
+.nav-section{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);padding:12px 16px 4px}
+.sidebar-footer{margin-top:auto;padding:12px 16px;border-top:1px solid var(--border)}
+.sidebar-footer .btn-sm{width:100%}
+
+/* Topbar */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}
+.page-title{font-size:16px;font-weight:600}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.search-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:var(--r);font-size:13px;width:200px;font-family:var(--sans)}
+.search-input:focus{outline:none;border-color:var(--accent)}
+.search-input::placeholder{color:var(--text3)}
+
+/* Panels */
+.panel{display:none;padding:24px;flex:1;overflow-y:auto}
+.panel.active{display:block}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:var(--sans);transition:all 0.15s;white-space:nowrap}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--surface2);color:var(--text)}
+.btn-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(240,96,96,0.2)}
+.btn-danger:hover{background:rgba(240,96,96,0.22)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-icon{padding:5px 8px;font-size:13px}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px}
+.card-sm{padding:12px 14px}
+.card + .card{margin-top:12px}
+
+/* Grid layouts */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+/* Stats bar */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px}
+.stat-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:6px;font-family:var(--mono)}
+.stat-value{font-size:24px;font-weight:600;line-height:1;color:var(--text)}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.stat-good .stat-value{color:var(--green)}
+.stat-warn .stat-value{color:var(--amber)}
+.stat-bad .stat-value{color:var(--red)}
+.stat-info .stat-value{color:var(--accent)}
+
+/* Tags/badges */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;font-family:var(--mono)}
+.tag-green{background:var(--green-dim);color:var(--green)}
+.tag-amber{background:var(--amber-dim);color:var(--amber)}
+.tag-red{background:var(--red-dim);color:var(--red)}
+.tag-purple{background:var(--purple-dim);color:var(--purple)}
+.tag-cyan{background:var(--cyan-dim);color:var(--cyan)}
+.tag-blue{background:rgba(79,142,247,0.12);color:var(--accent)}
+.tag-gray{background:var(--surface3);color:var(--text2)}
+
+/* Form elements */
+.form-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.flex1{flex:1;min-width:120px}
+.form-group.flex2{flex:2;min-width:160px}
+label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;font-family:var(--mono)}
+input[type=text],input[type=number],select,textarea{background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:var(--r);font-size:13px;font-family:var(--sans);width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+select option{background:var(--surface2)}
+textarea{resize:vertical;min-height:60px}
+
+/* Term cards */
+.terms-container{display:flex;gap:16px;overflow-x:auto;padding-bottom:8px;align-items:flex-start}
+.term-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);min-width:260px;width:260px;flex-shrink:0}
+.term-card.active-term{border-color:rgba(79,142,247,0.35);box-shadow:0 0 0 1px rgba(79,142,247,0.12)}
+.term-header{padding:14px 16px 10px;border-bottom:1px solid var(--border)}
+.term-name-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.term-name{font-size:13px;font-weight:600;cursor:pointer}
+.term-name:hover{color:var(--accent)}
+.term-meta{font-size:11px;color:var(--text3);font-family:var(--mono);display:flex;gap:10px}
+.term-actions{display:flex;gap:4px}
+.term-stats{display:flex;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:11px;font-family:var(--mono);color:var(--text3)}
+.term-stat strong{color:var(--text2);font-weight:500}
+.term-classes{padding:8px}
+.class-chip{display:flex;align-items:flex-start;gap:8px;padding:8px;border-radius:var(--r);background:var(--surface2);margin-bottom:6px;cursor:grab;border:1px solid transparent;transition:all 0.15s}
+.class-chip:hover{border-color:var(--border2)}
+.class-chip.dragging{opacity:0.5;border-color:var(--accent)}
+.class-chip-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.class-chip-info{flex:1;min-width:0}
+.class-chip-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.class-chip-meta{display:flex;gap:6px;margin-top:3px;flex-wrap:wrap}
+.class-chip-actions{display:flex;gap:2px;opacity:0;transition:opacity 0.15s}
+.class-chip:hover .class-chip-actions{opacity:1}
+.drop-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:14px;text-align:center;font-size:12px;color:var(--text3);display:none}
+.drop-zone.active{display:block;background:rgba(79,142,247,0.04)}
+.term-add{padding:8px;padding-top:0}
+
+/* Active term indicator */
+.active-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:5px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* Prereq table */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;padding:8px 10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);border-bottom:1px solid var(--border);font-family:var(--mono)}
+.data-table td{padding:10px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:rgba(255,255,255,0.02)}
+.editable-cell{cursor:pointer;border-radius:4px;padding:3px 6px;transition:background 0.12s}
+.editable-cell:hover{background:var(--surface3)}
+.editing input,.editing select{background:var(--surface3);border:1px solid var(--accent);color:var(--text);padding:3px 6px;border-radius:4px;font-size:13px;font-family:var(--sans);width:100%}
+
+/* Checklist */
+.checklist-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:var(--r);background:var(--surface2);margin-bottom:6px;border:1px solid transparent;transition:all 0.15s}
+.checklist-item.done{opacity:0.5}
+.checklist-item.done .ci-name{text-decoration:line-through;color:var(--text3)}
+.ci-check{width:18px;height:18px;border:1.5px solid var(--border2);border-radius:4px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all 0.15s}
+.ci-check.checked{background:var(--green);border-color:var(--green)}
+.ci-check.checked::after{content:'';display:block;width:4px;height:8px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg) translateY(-1px)}
+.ci-body{flex:1}
+.ci-name{font-size:13px;font-weight:500;margin-bottom:2px}
+.ci-cat{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.ci-actions{opacity:0;transition:opacity 0.15s;display:flex;gap:4px}
+.checklist-item:hover .ci-actions{opacity:1}
+
+/* Dashboard readiness */
+.readiness-bar{height:10px;background:var(--surface3);border-radius:99px;overflow:hidden;margin:8px 0}
+.readiness-fill{height:100%;border-radius:99px;transition:width 0.5s ease;background:linear-gradient(90deg,var(--accent),var(--green))}
+.readiness-status{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--r-lg);font-size:14px;font-weight:500;margin-bottom:20px}
+.rs-green{background:var(--green-dim);border:1px solid rgba(62,207,142,0.2);color:var(--green)}
+.rs-amber{background:var(--amber-dim);border:1px solid rgba(245,166,35,0.2);color:var(--amber)}
+.rs-red{background:var(--red-dim);border:1px solid rgba(240,96,96,0.2);color:var(--red)}
+.rs-icon{font-size:20px}
+
+/* GPA */
+.gpa-big{font-size:48px;font-weight:700;font-family:var(--mono);line-height:1}
+.gpa-good{color:var(--green)}
+.gpa-warn{color:var(--amber)}
+.gpa-bad{color:var(--red)}
+.gpa-none{color:var(--text3)}
+
+/* Section headers */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{font-size:15px;font-weight:600}
+.section-sub{font-size:12px;color:var(--text3);margin-top:2px}
+
+/* Progress bar */
+.prog-bar{height:4px;background:var(--surface3);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;background:var(--accent);transition:width 0.4s}
+
+/* Filter chips */
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.filter-chip{padding:4px 12px;border-radius:99px;font-size:12px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:var(--sans);transition:all 0.12s}
+.filter-chip:hover{border-color:var(--accent);color:var(--accent)}
+.filter-chip.active{background:rgba(79,142,247,0.12);border-color:var(--accent);color:var(--accent)}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;backdrop-filter:blur(4px)}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-lg);padding:24px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:18px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* Inline editable */
+.inline-edit{display:inline-flex;align-items:center;gap:4px}
+.inline-edit input{background:var(--surface3);border:1px solid var(--accent);color:var(--text);padding:2px 8px;border-radius:4px;font-size:inherit;font-family:inherit;font-weight:inherit}
+
+/* Timeline view */
+.timeline-row{display:flex;gap:0;position:relative;margin-bottom:32px;overflow-x:auto;padding-bottom:4px}
+.timeline-col{flex-shrink:0;width:200px;position:relative}
+.timeline-col:not(:last-child)::after{content:'→';position:absolute;right:-12px;top:18px;color:var(--text3);font-size:18px;z-index:1}
+.timeline-node{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;margin:0 16px}
+.timeline-node.active{border-color:var(--accent);background:rgba(79,142,247,0.05)}
+.timeline-node.completed{border-color:rgba(62,207,142,0.3);background:var(--green-dim)}
+.timeline-term{font-size:11px;font-weight:600;color:var(--text3);margin-bottom:4px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em}
+.timeline-classes{font-size:12px;color:var(--text2);line-height:1.6}
+.timeline-gpa{font-size:13px;font-weight:600;margin-top:6px;font-family:var(--mono)}
+
+/* Dividers */
+.divider{height:1px;background:var(--border);margin:16px 0}
+
+/* Empty states */
+.empty{text-align:center;padding:32px;color:var(--text3);font-size:13px}
+.empty-icon{font-size:28px;margin-bottom:8px}
+
+/* Notifications */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:12px 16px;font-size:13px;z-index:2000;animation:slideup 0.2s ease;box-shadow:0 4px 20px rgba(0,0,0,0.4)}
+.toast.toast-success{border-left:3px solid var(--green);color:var(--green)}
+.toast.toast-error{border-left:3px solid var(--red);color:var(--red)}
+@keyframes slideup{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* Colors for categories */
+.cat-ap{color:#f06060}
+.cat-math{color:#a78bfa}
+.cat-english{color:#38bdf8}
+.cat-gov{color:#f5a623}
+.cat-hum{color:#3ecf8e}
+.cat-science{color:#fb923c}
+.cat-elective{color:#94a3b8}
+.cat-other{color:#64748b}
+
+.dot-ap{background:#f06060}
+.dot-math{background:#a78bfa}
+.dot-english{background:#38bdf8}
+.dot-gov{background:#f5a623}
+.dot-hum{background:#3ecf8e}
+.dot-science{background:#fb923c}
+.dot-elective{background:#94a3b8}
+.dot-other{background:#64748b}
+
+/* Collapsible */
+.collapsible-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:10px 0;user-select:none}
+.collapsible-toggle{color:var(--text3);transition:transform 0.2s}
+.collapsible-toggle.open{transform:rotate(90deg)}
+
+/* Export */
+.export-preview{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px;font-size:11px;font-family:var(--mono);color:var(--text3);max-height:200px;overflow-y:auto;white-space:pre;margin:10px 0}
+
+@media(max-width:768px){
+  .sidebar{width:56px}.sidebar .nav-item span{display:none}.logo-title,.logo-sub{display:none}
+  .panel{padding:14px}.grid2,.grid3,.grid4{grid-template-columns:1fr}.stat-grid{grid-template-columns:repeat(2,1fr)}
+  .terms-container{flex-direction:column}.term-card{width:100%;min-width:unset}
+  .topbar{padding:10px 14px}
+}
+
+/* Sync bar */
+.sync-bar{display:flex;align-items:center;gap:10px;padding:7px 16px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:12px;color:var(--text3);flex-shrink:0}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.sync-dot.synced{background:var(--green)}
+.sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite}
+.sync-dot.error{background:var(--red)}
+.sync-user{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3)}
+.sync-avatar{width:22px;height:22px;border-radius:50%}
+.signin-overlay{position:fixed;inset:0;background:rgba(15,17,23,0.97);display:flex;align-items:center;justify-content:center;z-index:500;flex-direction:column;gap:20px}
+.signin-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-lg);padding:36px 40px;text-align:center;max-width:360px;width:100%}
+.signin-title{font-size:20px;font-weight:600;margin-bottom:6px}
+.signin-sub{font-size:13px;color:var(--text3);margin-bottom:24px;line-height:1.6}
+.signin-skip{font-size:12px;color:var(--text3);cursor:pointer;text-decoration:underline;margin-top:4px;display:inline-block}
+.signin-skip:hover{color:var(--text2)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-title">SCF Planner</div>
+    <div class="logo-sub">Radiography Track</div>
+  </div>
+  <div class="nav-section">Overview</div>
+  <button class="nav-item active" onclick="showPanel('dashboard')" id="nav-dashboard">
+    <span class="nav-icon">◈</span><span>Dashboard</span>
+  </button>
+  <button class="nav-item" onclick="showPanel('timeline')" id="nav-timeline">
+    <span class="nav-icon">→</span><span>Timeline</span>
+  </button>
+  <div class="nav-section">Planning</div>
+  <button class="nav-item" onclick="showPanel('terms')" id="nav-terms">
+    <span class="nav-icon">▦</span><span>Terms</span>
+    <span class="nav-badge" id="nb-terms">0</span>
+  </button>
+  <button class="nav-item" onclick="showPanel('classes')" id="nav-classes">
+    <span class="nav-icon">◎</span><span>All Classes</span>
+    <span class="nav-badge" id="nb-classes">0</span>
+  </button>
+  <div class="nav-section">Tracking</div>
+  <button class="nav-item" onclick="showPanel('prereqs')" id="nav-prereqs">
+    <span class="nav-icon">✓</span><span>Prerequisites</span>
+    <span class="nav-badge" id="nb-prereqs">0</span>
+  </button>
+  <button class="nav-item" onclick="showPanel('checklist')" id="nav-checklist">
+    <span class="nav-icon">☐</span><span>Post-Acceptance</span>
+    <span class="nav-badge" id="nb-checklist">0</span>
+  </button>
+  <button class="nav-item" onclick="showPanel('gpa')" id="nav-gpa">
+    <span class="nav-icon">∑</span><span>GPA Calc</span>
+  </button>
+  <div class="sidebar-footer">
+    <button class="btn btn-ghost btn-sm" onclick="showExport()" style="width:100%;justify-content:center">⬆ Export</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- TOPBAR -->
+<div id="sync-bar" class="sync-bar">
+  <div class="sync-dot" id="sync-dot"></div>
+  <span id="sync-label">Connecting...</span>
+</div>
+<div class="topbar">
+  <div class="page-title" id="page-title">Dashboard</div>
+  <div class="topbar-actions">
+    <input type="text" class="search-input" placeholder="Search classes, prereqs…" id="global-search" oninput="handleSearch(this.value)">
+    <button class="btn btn-primary btn-sm" onclick="quickAdd()">+ Add Class</button>
+  </div>
+</div>
+
+<!-- PANELS -->
+
+<!-- DASHBOARD -->
+<div class="panel active" id="panel-dashboard">
+  <div id="dash-readiness"></div>
+  <div class="stat-grid" id="dash-stats"></div>
+  <div class="grid2">
+    <div>
+      <div class="section-header"><div><div class="section-title">Prerequisite Progress</div></div></div>
+      <div id="dash-prereqs"></div>
+    </div>
+    <div>
+      <div class="section-header"><div><div class="section-title">Current Term</div></div></div>
+      <div id="dash-current-term"></div>
+    </div>
+  </div>
+  <div style="margin-top:20px">
+    <div class="section-header"><div><div class="section-title">Upcoming Terms</div></div></div>
+    <div id="dash-upcoming"></div>
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<div class="panel" id="panel-timeline">
+  <div class="section-header">
+    <div><div class="section-title">Academic Timeline</div><div class="section-sub">Summer 2026 → Spring 2028</div></div>
+  </div>
+  <div id="timeline-content"></div>
+</div>
+
+<!-- TERMS -->
+<div class="panel" id="panel-terms">
+  <div class="section-header">
+    <div><div class="section-title">Term Planner</div><div class="section-sub">Drag classes between terms</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="addTerm()">+ Add Term</button>
+    </div>
+  </div>
+  <div class="terms-container" id="terms-container"></div>
+</div>
+
+<!-- ALL CLASSES -->
+<div class="panel" id="panel-classes">
+  <div class="section-header">
+    <div><div class="section-title">All Classes</div></div>
+    <button class="btn btn-primary btn-sm" onclick="quickAdd()">+ Add Class</button>
+  </div>
+  <div class="filter-row" id="class-filters"></div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="data-table" id="classes-table">
+      <thead><tr>
+        <th>Course Name</th><th>Category</th><th>Term</th><th>Status</th><th>Grade</th><th>Credits</th><th>Notes</th><th></th>
+      </tr></thead>
+      <tbody id="classes-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PREREQS -->
+<div class="panel" id="panel-prereqs">
+  <div class="section-header">
+    <div><div class="section-title">Prerequisites Master List</div></div>
+    <button class="btn btn-primary btn-sm" onclick="addPrereq()">+ Add Prereq</button>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="data-table" id="prereqs-table">
+      <thead><tr>
+        <th>Course</th><th>Status</th><th>Linked Term</th><th>Notes</th><th></th>
+      </tr></thead>
+      <tbody id="prereqs-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- CHECKLIST -->
+<div class="panel" id="panel-checklist">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Post-Acceptance Checklist</div>
+      <div class="section-sub" id="checklist-progress-sub"></div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="addChecklistItem()">+ Add Item</button>
+  </div>
+  <div class="readiness-bar"><div class="readiness-fill" id="checklist-bar" style="width:0%"></div></div>
+  <div id="checklist-cats"></div>
+</div>
+
+<!-- GPA -->
+<div class="panel" id="panel-gpa">
+  <div class="section-header">
+    <div><div class="section-title">GPA Calculator</div></div>
+    <button class="btn btn-ghost btn-sm" onclick="clearGpa()">Clear All</button>
+  </div>
+  <div class="grid2">
+    <div class="card" style="text-align:center;padding:28px">
+      <div class="stat-label">Cumulative GPA</div>
+      <div class="gpa-big" id="gpa-big">—</div>
+      <div class="stat-sub" style="margin-top:8px" id="gpa-sub">No courses added</div>
+      <div id="gpa-warn" style="display:none;margin-top:10px;padding:8px 12px;background:var(--amber-dim);border-radius:var(--r);font-size:12px;color:var(--amber)">⚠ GPA below 3.0 — aim for stronger grades</div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-bottom:12px;font-size:14px">Add Course</div>
+      <div class="form-group" style="margin-bottom:10px">
+        <label>Course Name</label>
+        <input type="text" id="gpa-name" placeholder="Anatomy & Physiology I">
+      </div>
+      <div class="form-row">
+        <div class="form-group flex1">
+          <label>Grade</label>
+          <select id="gpa-grade">
+            <option>A</option><option>A-</option><option>B+</option><option>B</option><option>B-</option>
+            <option>C+</option><option>C</option><option>C-</option><option>D+</option><option>D</option><option>F</option>
+          </select>
+        </div>
+        <div class="form-group flex1">
+          <label>Credits</label>
+          <select id="gpa-credits">
+            <option value="1">1 cr</option><option value="2">2 cr</option><option value="3" selected>3 cr</option><option value="4">4 cr</option><option value="5">5 cr</option>
+          </select>
+        </div>
+        <div class="form-group flex1">
+          <label>Term</label>
+          <select id="gpa-term-select"><option value="">—</option></select>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="addGpaCourse()">Add to Calculator</button>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px;padding:0;overflow:hidden">
+    <table class="data-table" id="gpa-table">
+      <thead><tr><th>Course</th><th>Term</th><th>Grade</th><th>Credits</th><th>Points</th><th></th></tr></thead>
+      <tbody id="gpa-tbody"><tr><td colspan="6" class="empty">No courses yet</td></tr></tbody>
+    </table>
+  </div>
+  <div style="margin-top:16px" id="gpa-by-term"></div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODALS -->
+<div id="modal-overlay" class="modal-overlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast" style="display:none"></div>
+
+<!-- SIGN IN OVERLAY -->
+<div id="signin-overlay" class="signin-overlay">
+  <div class="signin-card">
+    <div style="font-size:32px;margin-bottom:12px">&#9672;</div>
+    <div class="signin-title">SCF Academic Planner</div>
+    <div class="signin-sub">Sign in with Google to sync your data across all your devices. Your data is saved privately to your own Google Drive.</div>
+    <div id="google-btn" style="display:flex;justify-content:center;margin-bottom:16px"></div>
+    <span class="signin-skip" onclick="skipSignin()">Continue without syncing (local only)</span>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA STORE
+// ============================================================
+const DEFAULTS = {
+  terms: [
+    {id:'t1',name:'Summer',year:2026,isCurrent:false,notes:''},
+    {id:'t2',name:'Fall',year:2026,isCurrent:true,notes:''},
+    {id:'t3',name:'Spring',year:2027,isCurrent:false,notes:''},
+    {id:'t4',name:'Summer',year:2027,isCurrent:false,notes:''},
+    {id:'t5',name:'Fall',year:2027,isCurrent:false,notes:''},
+    {id:'t6',name:'Spring',year:2028,isCurrent:false,notes:''}
+  ],
+  classes: [
+    {id:'c1',name:'Written Communication',category:'English',termId:'t1',status:'Enrolled',grade:'',credits:3,notes:'Focus on A'},
+    {id:'c2',name:'Humanities Elective',category:'Humanities',termId:'t1',status:'Enrolled',grade:'',credits:3,notes:''},
+    {id:'c3',name:'Anatomy & Physiology I',category:'A&P',termId:'t2',status:'Enrolled',grade:'',credits:3,notes:'HIGH PRIORITY'},
+    {id:'c4',name:'A&P I Lab',category:'A&P',termId:'t2',status:'Enrolled',grade:'',credits:1,notes:''},
+    {id:'c5',name:'American Government',category:'Government',termId:'t2',status:'Enrolled',grade:'',credits:3,notes:''},
+    {id:'c6',name:'Anatomy & Physiology II',category:'A&P',termId:'t3',status:'Not Started',grade:'',credits:3,notes:''},
+    {id:'c7',name:'A&P II Lab',category:'A&P',termId:'t3',status:'Not Started',grade:'',credits:1,notes:''},
+    {id:'c8',name:'Medical Terminology',category:'Elective',termId:'t3',status:'Not Started',grade:'',credits:3,notes:''},
+  ],
+  prereqs: [
+    {id:'p1',name:'A&P I + Lab',status:'',termId:'t2',notes:'Most important prereq'},
+    {id:'p2',name:'A&P II + Lab',status:'',termId:'t3',notes:''},
+    {id:'p3',name:'English Composition',status:'',termId:'t1',notes:''},
+    {id:'p4',name:'College Algebra or Statistics',status:'',termId:'',notes:''},
+    {id:'p5',name:'American Government',status:'',termId:'t2',notes:''},
+    {id:'p6',name:'Humanities Elective',status:'',termId:'t1',notes:''},
+  ],
+  checklist: [
+    {id:'cl1',name:'Background Check',category:'Administrative',done:false},
+    {id:'cl2',name:'Drug Screening',category:'Administrative',done:false},
+    {id:'cl3',name:'CPR Certification',category:'Certifications',done:false},
+    {id:'cl4',name:'Immunization Records',category:'Health',done:false},
+    {id:'cl5',name:'Health Clearance Form',category:'Health',done:false},
+    {id:'cl6',name:'Purchase Scrubs',category:'Equipment',done:false},
+    {id:'cl7',name:'Purchase Required Equipment',category:'Equipment',done:false},
+    {id:'cl8',name:'Student ID',category:'Administrative',done:false},
+  ],
+  gpaCourses: [],
+  appTarget:'Jan 2027'
+};
+
+// ============================================================
+// GOOGLE DRIVE SYNC
+// ============================================================
+const CLIENT_ID = '610369107204-efsi05f3geu6joojl6tds91ul1r3vdsh.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
+const FILE_NAME = 'scf_planner_data.json';
+
+let gDriveToken = null;
+let gDriveFileId = null;
+let gUser = null;
+let syncTimeout = null;
+
+function setSyncStatus(status, msg) {
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  if(!dot) return;
+  dot.className = 'sync-dot ' + status;
+  label.textContent = msg;
+}
+
+function initGoogleSignin() {
+  if(typeof google === 'undefined') { setTimeout(initGoogleSignin, 500); return; }
+  google.accounts.id.initialize({
+    client_id: CLIENT_ID,
+    callback: handleCredential,
+    auto_select: true,
+    cancel_on_tap_outside: false
+  });
+  google.accounts.id.renderButton(document.getElementById('google-btn'), {
+    theme: 'filled_black', size: 'large', text: 'signin_with', shape: 'pill', width: 240
+  });
+  google.accounts.id.prompt();
+}
+
+async function handleCredential(response) {
+  const payload = JSON.parse(atob(response.credential.split('.')[1]));
+  gUser = { name: payload.name, email: payload.email, picture: payload.picture };
+  localStorage.setItem('scf_guser', JSON.stringify(gUser));
+  await getAccessToken();
+}
+
+async function getAccessToken() {
+  return new Promise((resolve) => {
+    if(typeof google === 'undefined') { resolve(null); return; }
+    const tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: async (resp) => {
+        if(resp.access_token) {
+          gDriveToken = resp.access_token;
+          localStorage.setItem('scf_token_expiry', Date.now() + 3500000);
+          document.getElementById('signin-overlay').style.display = 'none';
+          renderSyncBar();
+          await loadFromDrive();
+          resolve(resp.access_token);
+        } else { resolve(null); }
+      }
+    });
+    tokenClient.requestAccessToken({ prompt: '' });
+  });
+}
+
+function renderSyncBar() {
+  const bar = document.getElementById('sync-bar');
+  if(!bar || !gUser) return;
+  bar.innerHTML = '<div class="sync-dot synced" id="sync-dot"></div><span id="sync-label">Synced to Drive</span>' +
+    '<div class="sync-user"><img class="sync-avatar" src="' + gUser.picture + '" referrerpolicy="no-referrer"><span>' + gUser.name + '</span>' +
+    '<button class="btn btn-ghost btn-sm" onclick="signOut()" style="padding:3px 8px;font-size:11px">Sign out</button></div>';
+}
+
+function signOut() {
+  gDriveToken = null; gUser = null; gDriveFileId = null;
+  localStorage.removeItem('scf_guser');
+  location.reload();
+}
+
+function skipSignin() {
+  document.getElementById('signin-overlay').style.display = 'none';
+  const bar = document.getElementById('sync-bar');
+  if(bar) bar.innerHTML = '<div class="sync-dot" id="sync-dot"></div><span id="sync-label">Local only — not synced</span>';
+}
+
+async function findDriveFile() {
+  const res = await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name%3D%22' + FILE_NAME + '"', {
+    headers: { Authorization: 'Bearer ' + gDriveToken }
+  });
+  const data = await res.json();
+  return data.files && data.files.length ? data.files[0].id : null;
+}
+
+async function loadFromDrive() {
+  if(!gDriveToken) return;
+  setSyncStatus('syncing', 'Loading from Drive...');
+  try {
+    gDriveFileId = await findDriveFile();
+    if(gDriveFileId) {
+      const res = await fetch('https://www.googleapis.com/drive/v3/files/' + gDriveFileId + '?alt=media', {
+        headers: { Authorization: 'Bearer ' + gDriveToken }
+      });
+      const data = await res.json();
+      Object.assign(S, data);
+      localStorage.setItem('scf_planner_v2', JSON.stringify(S));
+      setSyncStatus('synced', 'Synced from Drive');
+      renderPanel(activePanel);
+      updateNavBadges();
+    } else {
+      setSyncStatus('synced', 'New file — will save on first change');
+    }
+  } catch(e) { setSyncStatus('error', 'Sync error'); }
+}
+
+async function saveToDrive() {
+  if(!gDriveToken) return;
+  setSyncStatus('syncing', 'Saving...');
+  try {
+    const body = JSON.stringify(S);
+    if(!gDriveFileId) {
+      const meta = await fetch('https://www.googleapis.com/drive/v3/files', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + gDriveToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: FILE_NAME, parents: ['appDataFolder'] })
+      });
+      const f = await meta.json();
+      gDriveFileId = f.id;
+    }
+    await fetch('https://www.googleapis.com/upload/drive/v3/files/' + gDriveFileId + '?uploadType=media', {
+      method: 'PATCH',
+      headers: { Authorization: 'Bearer ' + gDriveToken, 'Content-Type': 'application/json' },
+      body
+    });
+    setSyncStatus('synced', 'Saved to Drive ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+  } catch(e) { setSyncStatus('error', 'Save failed — check connection'); }
+}
+
+function debouncedSave() {
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(saveToDrive, 1500);
+}
+
+// ============================================================
+// LOCAL STATE
+// ============================================================
+function loadState() {
+  try {
+    const raw = localStorage.getItem('scf_planner_v2');
+    return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULTS));
+  } catch { return JSON.parse(JSON.stringify(DEFAULTS)); }
+}
+function saveState() {
+  localStorage.setItem('scf_planner_v2', JSON.stringify(S));
+  updateNavBadges();
+  if(gDriveToken) debouncedSave();
+}
+
+let S = loadState();
+let draggedClass = null;
+let activeFilter = 'All';
+let activePanel = 'dashboard';
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  document.getElementById('nav-' + id)?.classList.add('active');
+  activePanel = id;
+  const titles = {dashboard:'Dashboard',timeline:'Timeline',terms:'Term Planner',classes:'All Classes',prereqs:'Prerequisites',checklist:'Post-Acceptance',gpa:'GPA Calculator'};
+  document.getElementById('page-title').textContent = titles[id] || id;
+  renderPanel(id);
+}
+
+function renderPanel(id) {
+  if(id==='dashboard') renderDashboard();
+  else if(id==='timeline') renderTimeline();
+  else if(id==='terms') renderTerms();
+  else if(id==='classes') renderClasses();
+  else if(id==='prereqs') renderPrereqs();
+  else if(id==='checklist') renderChecklist();
+  else if(id==='gpa') renderGpa();
+}
+
+function updateNavBadges() {
+  document.getElementById('nb-terms').textContent = S.terms.length;
+  document.getElementById('nb-classes').textContent = S.classes.length;
+  document.getElementById('nb-prereqs').textContent = S.prereqs.filter(p=>p.status==='Finished').length + '/' + S.prereqs.length;
+  const cl = S.checklist;
+  document.getElementById('nb-checklist').textContent = cl.filter(c=>c.done).length + '/' + cl.length;
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+const GRADE_PTS = {'A':4.0,'A-':3.7,'B+':3.3,'B':3.0,'B-':2.7,'C+':2.3,'C':2.0,'C-':1.7,'D+':1.3,'D':1.0,'F':0.0};
+const CATS = ['A&P','Math','English','Government','Humanities','Science','Elective','Other'];
+const STATUSES = ['Not Started','Enrolled','Completed'];
+const PREREQ_STATUSES = ['','Enrolled','Finished'];
+const CAT_COLORS = {'A&P':'ap','Math':'math','English':'english','Government':'gov','Humanities':'hum','Science':'science','Elective':'elective','Other':'other'};
+
+function catColor(c) { return CAT_COLORS[c] || 'other'; }
+function termLabel(id) { if(!id) return '—'; const t = S.terms.find(x=>x.id===id); return t ? t.name+' '+t.year : '—'; }
+function uid() { return 'id_'+Date.now()+'_'+Math.random().toString(36).substr(2,6); }
+function calcGpa(courses) {
+  if(!courses.length) return null;
+  let pts=0,cr=0;
+  courses.forEach(c=>{ const g=GRADE_PTS[c.grade]; if(g!==undefined){pts+=g*c.credits;cr+=parseInt(c.credits);} });
+  return cr ? (pts/cr) : null;
+}
+function gpaClass(g) { if(g===null||g===undefined) return 'gpa-none'; if(g>=3.5) return 'gpa-good'; if(g>=3.0) return 'gpa-good'; if(g>=2.0) return 'gpa-warn'; return 'gpa-bad'; }
+function statusTag(s) {
+  if(s==='Completed'||s==='Finished') return `<span class="tag tag-green">${s}</span>`;
+  if(s==='Enrolled') return `<span class="tag tag-blue">${s}</span>`;
+  if(s==='Not Started') return `<span class="tag tag-gray">${s}</span>`;
+  return `<span class="tag tag-gray">—</span>`;
+}
+
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast toast-'+type;
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.style.display='none'; }, 2500);
+}
+
+function closeModal(e) {
+  if(e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').style.display = 'none';
+  }
+}
+function openModal(html) {
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+function closeModalNow() {
+  document.getElementById('modal-overlay').style.display = 'none';
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard() {
+  renderDashReadiness();
+  renderDashStats();
+  renderDashPrereqs();
+  renderDashCurrentTerm();
+  renderDashUpcoming();
+}
+
+function getDashReadiness() {
+  const prereqDone = S.prereqs.filter(p=>p.status==='Finished').length;
+  const prereqTotal = S.prereqs.length;
+  const pct = prereqTotal ? Math.round((prereqDone/prereqTotal)*100) : 0;
+  const gpa = calcGpa(S.gpaCourses);
+  const gpaOk = gpa === null || gpa >= 3.0;
+  if(prereqDone===prereqTotal && prereqTotal>0 && gpaOk) return {label:'Ready to Apply!',cls:'rs-green',icon:'✓',pct:100};
+  if(pct>=50) return {label:'In Progress — '+pct+'% prerequisites complete',cls:'rs-amber',icon:'◑',pct};
+  return {label:'Not Yet Ready — '+pct+'% prerequisites complete',cls:'rs-red',icon:'○',pct};
+}
+
+function renderDashReadiness() {
+  const r = getDashReadiness();
+  document.getElementById('dash-readiness').innerHTML = `
+    <div class="readiness-status ${r.cls}" style="margin-bottom:16px">
+      <span class="rs-icon">${r.icon}</span>
+      <div style="flex:1">
+        <div>${r.label}</div>
+        <div class="readiness-bar" style="margin-top:8px"><div class="readiness-fill" style="width:${r.pct}%"></div></div>
+      </div>
+      <span style="font-size:13px;font-family:var(--mono);font-weight:600">${r.pct}%</span>
+    </div>`;
+}
+
+function renderDashStats() {
+  const totalClasses = S.classes.length;
+  const completed = S.classes.filter(c=>c.status==='Completed').length;
+  const enrolled = S.classes.filter(c=>c.status==='Enrolled').length;
+  const totalCredits = S.classes.reduce((s,c)=>s+parseInt(c.credits||0),0);
+  const completedCredits = S.classes.filter(c=>c.status==='Completed').reduce((s,c)=>s+parseInt(c.credits||0),0);
+  const gpa = calcGpa(S.gpaCourses);
+  const prereqDone = S.prereqs.filter(p=>p.status==='Finished').length;
+  document.getElementById('dash-stats').innerHTML = [
+    {label:'Completed',value:completed+'/'+totalClasses,sub:'classes',cls:'stat-info'},
+    {label:'Credits Done',value:completedCredits+'/'+totalCredits,sub:'credit hours',cls:''},
+    {label:'GPA',value:gpa?gpa.toFixed(2):'—',sub:gpa&&gpa<3.0?'⚠ Below 3.0':'cumulative',cls:gpa?gpaClass(gpa)+'_stat stat-good':''},
+    {label:'Prereqs',value:prereqDone+'/'+S.prereqs.length,sub:'completed',cls:prereqDone===S.prereqs.length?'stat-good':''},
+    {label:'Checklist',value:S.checklist.filter(x=>x.done).length+'/'+S.checklist.length,sub:'post-acceptance',cls:''},
+    {label:'Apply',value:S.appTarget||'Jan 2027',sub:'target date',cls:'stat-info'},
+  ].map(s=>`<div class="stat-card ${s.cls}"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
+}
+
+function renderDashPrereqs() {
+  const el = document.getElementById('dash-prereqs');
+  if(!S.prereqs.length){el.innerHTML='<div class="empty"><div class="empty-icon">☐</div>No prerequisites added</div>';return;}
+  el.innerHTML = S.prereqs.map(p=>{
+    const cls = p.status==='Finished'?'tag-green':p.status==='Enrolled'?'tag-blue':'tag-gray';
+    const label = p.status||'Not Started';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:13px;font-weight:500">${p.name}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${p.termId?`<span style="font-size:11px;color:var(--text3)">${termLabel(p.termId)}</span>`:''}
+        <span class="tag ${cls}">${label}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderDashCurrentTerm() {
+  const el = document.getElementById('dash-current-term');
+  const current = S.terms.find(t=>t.isCurrent);
+  if(!current){el.innerHTML='<div class="empty">No active term set</div>';return;}
+  const classes = S.classes.filter(c=>c.termId===current.id);
+  const done = classes.filter(c=>c.status==='Completed').length;
+  el.innerHTML = `<div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div><span class="active-dot"></span><strong>${current.name} ${current.year}</strong></div>
+      <span class="tag tag-blue">${done}/${classes.length} done</span>
+    </div>
+    <div class="prog-bar" style="margin-bottom:12px"><div class="prog-fill" style="width:${classes.length?Math.round(done/classes.length*100):0}%"></div></div>
+    ${classes.map(c=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+        <div class="class-chip-dot dot-${catColor(c.category)}"></div>
+        <div style="flex:1;font-size:13px">${c.name}</div>
+        <span class="tag tag-gray" style="font-size:10px">${c.credits}cr</span>
+        ${statusTag(c.status)}
+      </div>`).join('')}
+    ${!classes.length?'<div class="empty" style="padding:16px">No classes this term</div>':''}
+  </div>`;
+}
+
+function renderDashUpcoming() {
+  const el = document.getElementById('dash-upcoming');
+  const current = S.terms.find(t=>t.isCurrent);
+  const currentIdx = current ? S.terms.indexOf(current) : -1;
+  const upcoming = S.terms.slice(currentIdx+1, currentIdx+4);
+  if(!upcoming.length){el.innerHTML='<div class="empty">No upcoming terms</div>';return;}
+  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+  ${upcoming.map(t=>{
+    const cls = S.classes.filter(c=>c.termId===t.id);
+    const creds = cls.reduce((s,c)=>s+parseInt(c.credits||0),0);
+    return `<div class="card card-sm">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px">${t.name} ${t.year}</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;font-family:var(--mono)">${cls.length} classes · ${creds} credits</div>
+      ${cls.slice(0,3).map(c=>`<div style="font-size:12px;color:var(--text2);padding:2px 0">· ${c.name}</div>`).join('')}
+      ${cls.length>3?`<div style="font-size:11px;color:var(--text3);margin-top:4px">+${cls.length-3} more</div>`:''}
+    </div>`;
+  }).join('')}
+  </div>`;
+}
+
+// ============================================================
+// TIMELINE
+// ============================================================
+function renderTimeline() {
+  const el = document.getElementById('timeline-content');
+  el.innerHTML = `
+    <div class="timeline-row">
+    ${S.terms.map(t=>{
+      const classes = S.classes.filter(c=>c.termId===t.id);
+      const done = classes.filter(c=>c.status==='Completed').length;
+      const allDone = classes.length && done===classes.length;
+      const gpa = calcGpa(S.gpaCourses.filter(g=>g.termId===t.id));
+      return `<div class="timeline-col">
+        <div class="timeline-node ${t.isCurrent?'active':allDone?'completed':''}">
+          <div class="timeline-term">${t.isCurrent?'<span class="active-dot"></span>':''}${t.name} ${t.year}</div>
+          <div class="timeline-classes">
+            ${classes.length?classes.map(c=>`<div style="display:flex;align-items:center;gap:4px"><div class="class-chip-dot dot-${catColor(c.category)}" style="width:5px;height:5px;margin-top:0"></div>${c.name}</div>`).join(''):'<span style="color:var(--text3)">No classes</span>'}
+          </div>
+          ${gpa!==null?`<div class="timeline-gpa" style="color:${gpa>=3.0?'var(--green)':'var(--amber)'}">GPA: ${gpa.toFixed(2)}</div>`:''}
+        </div>
+      </div>`;
+    }).join('')}
+    </div>
+    <div style="margin-top:32px">
+      <div class="section-header"><div class="section-title">Category Legend</div></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        ${CATS.map(c=>`<div style="display:flex;align-items:center;gap:6px;font-size:12px"><div class="class-chip-dot dot-${catColor(c)}"></div>${c}</div>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ============================================================
+// TERMS
+// ============================================================
+function renderTerms() {
+  const container = document.getElementById('terms-container');
+  container.innerHTML = S.terms.map(t => renderTermCard(t)).join('') +
+    `<div style="min-width:220px;display:flex;align-items:center;justify-content:center">
+      <button class="btn btn-ghost" onclick="addTerm()">+ Add Term</button>
+    </div>`;
+  setupDragDrop();
+}
+
+function renderTermCard(t) {
+  const classes = S.classes.filter(c=>c.termId===t.id);
+  const done = classes.filter(c=>c.status==='Completed').length;
+  const enrolled = classes.filter(c=>c.status==='Enrolled').length;
+  const credits = classes.reduce((s,c)=>s+parseInt(c.credits||0),0);
+  const completedCredits = classes.filter(c=>c.status==='Completed').reduce((s,c)=>s+parseInt(c.credits||0),0);
+  const pct = classes.length ? Math.round(done/classes.length*100) : 0;
+  const gpa = calcGpa(S.gpaCourses.filter(g=>g.termId===t.id));
+
+  return `<div class="term-card ${t.isCurrent?'active-term':''}" id="term-${t.id}" data-term-id="${t.id}">
+    <div class="term-header">
+      <div class="term-name-row">
+        <div class="term-name" onclick="editTermName('${t.id}')">${t.isCurrent?'<span class="active-dot"></span>':''}${t.name} ${t.year}</div>
+        <div class="term-actions">
+          <button class="btn btn-icon btn-ghost" onclick="toggleCurrentTerm('${t.id}')" title="${t.isCurrent?'Unset active':'Set as active'}">⊙</button>
+          <button class="btn btn-icon btn-ghost" onclick="deleteTerm('${t.id}')" title="Delete term">×</button>
+        </div>
+      </div>
+      <div class="prog-bar" style="margin-top:6px"><div class="prog-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="term-stats">
+      <span><strong>${credits}</strong> cr enrolled</span>
+      <span><strong>${completedCredits}</strong> cr done</span>
+      ${gpa!==null?`<span><strong>${gpa.toFixed(2)}</strong> GPA</span>`:''}
+      <span style="color:${classes.length>=5?'var(--amber)':''}">${classes.length} classes${classes.length>=5?' ⚠':''}</span>
+    </div>
+    <div class="term-classes" id="term-classes-${t.id}" ondragover="dragOver(event,'${t.id}')" ondragleave="dragLeave(event,'${t.id}')" ondrop="dropClass(event,'${t.id}')">
+      ${classes.map(c=>renderClassChip(c)).join('')}
+      <div class="drop-zone" id="drop-${t.id}">Drop class here</div>
+    </div>
+    <div class="term-add">
+      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="quickAddToTerm('${t.id}')">+ Add Class</button>
+    </div>
+  </div>`;
+}
+
+function renderClassChip(c) {
+  return `<div class="class-chip" draggable="true" id="chip-${c.id}"
+    ondragstart="dragStart(event,'${c.id}')" ondragend="dragEnd(event)">
+    <div class="class-chip-dot dot-${catColor(c.category)}"></div>
+    <div class="class-chip-info">
+      <div class="class-chip-name">${c.name}</div>
+      <div class="class-chip-meta">
+        <span class="tag tag-gray" style="font-size:10px">${c.credits}cr</span>
+        ${statusTag(c.status)}
+        ${c.grade?`<span class="tag tag-green" style="font-size:10px">${c.grade}</span>`:''}
+      </div>
+    </div>
+    <div class="class-chip-actions">
+      <button class="btn btn-icon btn-ghost" onclick="editClass('${c.id}')" title="Edit">✎</button>
+      <button class="btn btn-icon btn-ghost" onclick="deleteClass('${c.id}')" title="Delete" style="color:var(--red)">×</button>
+    </div>
+  </div>`;
+}
+
+// Drag and drop
+function dragStart(e, classId) {
+  draggedClass = classId;
+  document.getElementById('chip-'+classId)?.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function dragEnd(e) {
+  if(draggedClass) document.getElementById('chip-'+draggedClass)?.classList.remove('dragging');
+  document.querySelectorAll('.drop-zone').forEach(z=>z.style.display='none');
+  draggedClass = null;
+}
+function dragOver(e, termId) {
+  e.preventDefault();
+  const dz = document.getElementById('drop-'+termId);
+  if(dz) dz.style.display = 'block';
+}
+function dragLeave(e, termId) {
+  if(!e.currentTarget.contains(e.relatedTarget)) {
+    const dz = document.getElementById('drop-'+termId);
+    if(dz) dz.style.display = 'none';
+  }
+}
+function dropClass(e, termId) {
+  e.preventDefault();
+  if(!draggedClass) return;
+  const cls = S.classes.find(c=>c.id===draggedClass);
+  if(cls) { cls.termId = termId; saveState(); renderTerms(); toast('Moved to '+termLabel(termId)); }
+}
+function setupDragDrop() {} // handled inline
+
+function editTermName(id) {
+  const t = S.terms.find(x=>x.id===id);
+  if(!t) return;
+  openModal(`<div class="modal-title">Edit Term</div>
+    <div class="form-row">
+      <div class="form-group flex1"><label>Term</label>
+        <select id="em-name"><option ${t.name==='Spring'?'selected':''}>Spring</option><option ${t.name==='Summer'?'selected':''}>Summer</option><option ${t.name==='Fall'?'selected':''}>Fall</option></select>
+      </div>
+      <div class="form-group flex1"><label>Year</label>
+        <input type="number" id="em-year" value="${t.year}" min="2024" max="2032">
+      </div>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="em-notes">${t.notes||''}</textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTermEdit('${id}')">Save</button>
+    </div>`);
+}
+function saveTermEdit(id) {
+  const t = S.terms.find(x=>x.id===id);
+  t.name = document.getElementById('em-name').value;
+  t.year = parseInt(document.getElementById('em-year').value);
+  t.notes = document.getElementById('em-notes').value;
+  saveState(); closeModalNow(); renderTerms(); toast('Term updated');
+}
+function toggleCurrentTerm(id) {
+  S.terms.forEach(t=>t.isCurrent=false);
+  const t = S.terms.find(x=>x.id===id);
+  if(t) t.isCurrent = true;
+  saveState(); renderTerms(); toast('Active term set');
+}
+function deleteTerm(id) {
+  if(!confirm('Delete this term? Classes assigned here will become unassigned.')) return;
+  S.classes.filter(c=>c.termId===id).forEach(c=>c.termId='');
+  S.terms = S.terms.filter(t=>t.id!==id);
+  saveState(); renderTerms(); toast('Term deleted','error');
+}
+function addTerm() {
+  const last = S.terms[S.terms.length-1];
+  const termOrder = ['Spring','Summer','Fall'];
+  let nextName = 'Fall', nextYear = 2026;
+  if(last) {
+    const idx = termOrder.indexOf(last.name);
+    nextName = termOrder[(idx+1)%3];
+    nextYear = idx===2 ? last.year+1 : last.year;
+  }
+  S.terms.push({id:uid(),name:nextName,year:nextYear,isCurrent:false,notes:''});
+  saveState(); renderTerms(); toast('Term added');
+}
+
+// ============================================================
+// CLASSES
+// ============================================================
+function renderClasses(filter) {
+  // Build filter chips
+  const cats = ['All', ...new Set(S.classes.map(c=>c.category))];
+  const statuses = ['All','Not Started','Enrolled','Completed'];
+  if(filter !== undefined) activeFilter = filter;
+  document.getElementById('class-filters').innerHTML =
+    cats.map(c=>`<button class="filter-chip ${activeFilter===c?'active':''}" onclick="renderClasses('${c}')">${c}</button>`).join('') +
+    `<span style="color:var(--border2);margin:0 4px">|</span>` +
+    statuses.slice(1).map(s=>`<button class="filter-chip ${activeFilter===s?'active':''}" onclick="renderClasses('${s}')">${s}</button>`).join('');
+
+  let classes = S.classes;
+  if(activeFilter && activeFilter!=='All') {
+    classes = classes.filter(c=>c.category===activeFilter||c.status===activeFilter);
+  }
+  const search = document.getElementById('global-search')?.value?.toLowerCase()||'';
+  if(search) classes = classes.filter(c=>c.name.toLowerCase().includes(search));
+
+  const tbody = document.getElementById('classes-tbody');
+  if(!classes.length){tbody.innerHTML=`<tr><td colspan="8" class="empty">No classes found</td></tr>`;return;}
+  tbody.innerHTML = classes.map(c=>`
+    <tr>
+      <td><span style="font-weight:500">${c.name}</span></td>
+      <td><span class="tag" style="background:var(--${catColor(c.category)}-dim,var(--surface3));color:var(--${catColor(c.category)},var(--text2))">${c.category}</span></td>
+      <td style="font-size:12px;color:var(--text3)">${termLabel(c.termId)}</td>
+      <td>${statusTag(c.status)}</td>
+      <td><span style="font-family:var(--mono);font-size:13px;color:var(--text2)">${c.grade||'—'}</span></td>
+      <td><span style="font-family:var(--mono);font-size:13px">${c.credits}</span></td>
+      <td style="font-size:12px;color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.notes||'—'}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="editClass('${c.id}')">✎</button>
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="duplicateClass('${c.id}')">⎘</button>
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="deleteClass('${c.id}')" style="color:var(--red)">×</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function quickAdd() { quickAddToTerm(''); }
+function quickAddToTerm(termId) {
+  const termOptions = S.terms.map(t=>`<option value="${t.id}" ${t.id===termId?'selected':''}>${t.name} ${t.year}</option>`).join('');
+  openModal(`<div class="modal-title">Add Class</div>
+    <div class="form-group" style="margin-bottom:10px"><label>Class Name</label><input type="text" id="ac-name" placeholder="e.g. Anatomy & Physiology I" autofocus></div>
+    <div class="form-row">
+      <div class="form-group flex2"><label>Category</label>
+        <select id="ac-cat">${CATS.map(c=>`<option>${c}</option>`).join('')}</select>
+      </div>
+      <div class="form-group flex1"><label>Credits</label>
+        <select id="ac-credits"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group flex2"><label>Term</label>
+        <select id="ac-term"><option value="">Unassigned</option>${termOptions}</select>
+      </div>
+      <div class="form-group flex1"><label>Status</label>
+        <select id="ac-status">${STATUSES.map(s=>`<option>${s}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group flex1"><label>Grade</label><input type="text" id="ac-grade" placeholder="A, B, C…" maxlength="3"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="ac-notes" placeholder="Optional notes…"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewClass()">Add Class</button>
+    </div>`);
+}
+
+function saveNewClass() {
+  const name = document.getElementById('ac-name').value.trim();
+  if(!name){toast('Class name required','error');return;}
+  S.classes.push({id:uid(),name,category:document.getElementById('ac-cat').value,termId:document.getElementById('ac-term').value,status:document.getElementById('ac-status').value,grade:document.getElementById('ac-grade').value.toUpperCase(),credits:parseInt(document.getElementById('ac-credits').value),notes:document.getElementById('ac-notes').value});
+  saveState(); closeModalNow(); renderPanel(activePanel); toast('Class added');
+}
+
+function editClass(id) {
+  const c = S.classes.find(x=>x.id===id);
+  if(!c) return;
+  const termOptions = S.terms.map(t=>`<option value="${t.id}" ${t.id===c.termId?'selected':''}>${t.name} ${t.year}</option>`).join('');
+  openModal(`<div class="modal-title">Edit Class</div>
+    <div class="form-group" style="margin-bottom:10px"><label>Class Name</label><input type="text" id="ec-name" value="${c.name}"></div>
+    <div class="form-row">
+      <div class="form-group flex2"><label>Category</label>
+        <select id="ec-cat">${CATS.map(x=>`<option ${x===c.category?'selected':''}>${x}</option>`).join('')}</select>
+      </div>
+      <div class="form-group flex1"><label>Credits</label>
+        <select id="ec-credits"><option value="1" ${c.credits==1?'selected':''}>1</option><option value="2" ${c.credits==2?'selected':''}>2</option><option value="3" ${c.credits==3?'selected':''}>3</option><option value="4" ${c.credits==4?'selected':''}>4</option><option value="5" ${c.credits==5?'selected':''}>5</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group flex2"><label>Term</label>
+        <select id="ec-term"><option value="">Unassigned</option>${termOptions}</select>
+      </div>
+      <div class="form-group flex1"><label>Status</label>
+        <select id="ec-status">${STATUSES.map(s=>`<option ${s===c.status?'selected':''}>${s}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group flex1"><label>Grade</label><input type="text" id="ec-grade" value="${c.grade}" maxlength="3"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="ec-notes">${c.notes||''}</textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" onclick="deleteClass('${id}');closeModalNow()">Delete</button>
+      <button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditClass('${id}')">Save</button>
+    </div>`);
+}
+
+function saveEditClass(id) {
+  const c = S.classes.find(x=>x.id===id);
+  c.name = document.getElementById('ec-name').value.trim();
+  c.category = document.getElementById('ec-cat').value;
+  c.termId = document.getElementById('ec-term').value;
+  c.status = document.getElementById('ec-status').value;
+  c.grade = document.getElementById('ec-grade').value.toUpperCase();
+  c.credits = parseInt(document.getElementById('ec-credits').value);
+  c.notes = document.getElementById('ec-notes').value;
+  saveState(); closeModalNow(); renderPanel(activePanel); toast('Class updated');
+}
+
+function duplicateClass(id) {
+  const c = S.classes.find(x=>x.id===id);
+  if(!c) return;
+  const copy = {...c, id:uid(), name:c.name+' (copy)', status:'Not Started', grade:''};
+  S.classes.push(copy);
+  saveState(); renderPanel(activePanel); toast('Class duplicated');
+}
+
+function deleteClass(id) {
+  if(!confirm('Delete this class?')) return;
+  S.classes = S.classes.filter(c=>c.id!==id);
+  saveState(); renderPanel(activePanel); toast('Class deleted','error');
+}
+
+// ============================================================
+// PREREQUISITES
+// ============================================================
+function renderPrereqs() {
+  const tbody = document.getElementById('prereqs-tbody');
+  if(!S.prereqs.length){tbody.innerHTML=`<tr><td colspan="5" class="empty">No prerequisites. <button class="btn btn-ghost btn-sm" onclick="addPrereq()">Add one</button></td></tr>`;return;}
+  tbody.innerHTML = S.prereqs.map(p=>`
+    <tr>
+      <td><span style="font-weight:500;cursor:pointer" onclick="editPrereqCell('${p.id}','name',this)">${p.name}</span></td>
+      <td>
+        <select onchange="updatePrereq('${p.id}','status',this.value)" style="background:transparent;border:none;font-size:13px;color:var(--text2);cursor:pointer;padding:2px">
+          ${PREREQ_STATUSES.map(s=>`<option ${s===p.status?'selected':''}>${s||'Not Started'}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <select onchange="updatePrereq('${p.id}','termId',this.value)" style="background:transparent;border:none;font-size:13px;color:var(--text3);cursor:pointer;padding:2px">
+          <option value="">—</option>
+          ${S.terms.map(t=>`<option value="${t.id}" ${t.id===p.termId?'selected':''}>${t.name} ${t.year}</option>`).join('')}
+        </select>
+      </td>
+      <td><span style="font-size:12px;color:var(--text3);cursor:pointer" onclick="editPrereqCell('${p.id}','notes',this)">${p.notes||'—'}</span></td>
+      <td><button class="btn btn-icon btn-ghost" onclick="deletePrereq('${p.id}')" style="color:var(--red)">×</button></td>
+    </tr>`).join('');
+}
+
+function updatePrereq(id, field, val) {
+  const p = S.prereqs.find(x=>x.id===id);
+  if(p) {
+    if(field==='status') p.status = val==='Not Started'?'':val;
+    else p[field] = val;
+    saveState();
+  }
+}
+
+function editPrereqCell(id, field, el) {
+  const p = S.prereqs.find(x=>x.id===id);
+  if(!p) return;
+  const old = el.textContent;
+  el.innerHTML = `<input type="text" value="${p[field]||''}" onblur="savePrereqCell('${id}','${field}',this,this.value)" onkeydown="if(event.key==='Enter')this.blur()" style="width:100%;background:var(--surface3);border:1px solid var(--accent);color:var(--text);padding:3px 6px;border-radius:4px;font-size:13px">`;
+  el.querySelector('input').focus();
+}
+function savePrereqCell(id, field, el, val) {
+  const p = S.prereqs.find(x=>x.id===id);
+  if(p){ p[field]=val; saveState(); renderPrereqs(); }
+}
+
+function addPrereq() {
+  openModal(`<div class="modal-title">Add Prerequisite</div>
+    <div class="form-group" style="margin-bottom:10px"><label>Course Name</label><input type="text" id="ap-name" placeholder="e.g. A&P I + Lab" autofocus></div>
+    <div class="form-row">
+      <div class="form-group flex1"><label>Status</label>
+        <select id="ap-status">${PREREQ_STATUSES.map(s=>`<option>${s||'Not Started'}</option>`).join('')}</select>
+      </div>
+      <div class="form-group flex1"><label>Linked Term</label>
+        <select id="ap-term"><option value="">—</option>${S.terms.map(t=>`<option value="${t.id}">${t.name} ${t.year}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="ap-notes"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewPrereq()">Add</button>
+    </div>`);
+}
+function saveNewPrereq() {
+  const name = document.getElementById('ap-name').value.trim();
+  if(!name){toast('Name required','error');return;}
+  const statusVal = document.getElementById('ap-status').value;
+  S.prereqs.push({id:uid(),name,status:statusVal==='Not Started'?'':statusVal,termId:document.getElementById('ap-term').value,notes:document.getElementById('ap-notes').value});
+  saveState(); closeModalNow(); renderPrereqs(); toast('Prerequisite added');
+}
+function deletePrereq(id) {
+  if(!confirm('Delete this prerequisite?')) return;
+  S.prereqs = S.prereqs.filter(p=>p.id!==id);
+  saveState(); renderPrereqs(); toast('Deleted','error');
+}
+
+// ============================================================
+// CHECKLIST
+// ============================================================
+function renderChecklist() {
+  const done = S.checklist.filter(c=>c.done).length;
+  const total = S.checklist.length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('checklist-progress-sub').textContent = `${done} of ${total} complete (${pct}%)`;
+  document.getElementById('checklist-bar').style.width = pct+'%';
+
+  const cats = [...new Set(S.checklist.map(c=>c.category))];
+  const el = document.getElementById('checklist-cats');
+  if(!S.checklist.length){el.innerHTML=`<div class="empty"><div class="empty-icon">☐</div>No items yet. Add post-acceptance tasks above.</div>`;return;}
+
+  el.innerHTML = cats.map(cat=>{
+    const items = S.checklist.filter(c=>c.category===cat);
+    return `<div style="margin-bottom:20px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:8px;font-family:var(--mono)">${cat}</div>
+      ${items.map(item=>`
+        <div class="checklist-item ${item.done?'done':''}" id="cli-${item.id}">
+          <div class="ci-check ${item.done?'checked':''}" onclick="toggleChecklist('${item.id}')"></div>
+          <div class="ci-body">
+            <div class="ci-name">${item.name}</div>
+            <div class="ci-cat">${item.category}</div>
+          </div>
+          <div class="ci-actions">
+            <button class="btn btn-icon btn-ghost btn-sm" onclick="editChecklistItem('${item.id}')">✎</button>
+            <button class="btn btn-icon btn-ghost btn-sm" onclick="deleteChecklistItem('${item.id}')" style="color:var(--red)">×</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function toggleChecklist(id) {
+  const item = S.checklist.find(c=>c.id===id);
+  if(item){ item.done=!item.done; saveState(); renderChecklist(); }
+}
+function addChecklistItem() {
+  const cats = [...new Set(S.checklist.map(c=>c.category)), 'Administrative','Health','Certifications','Equipment','Other'];
+  const uniqueCats = [...new Set(cats)];
+  openModal(`<div class="modal-title">Add Checklist Item</div>
+    <div class="form-group" style="margin-bottom:10px"><label>Item Name</label><input type="text" id="ci-name" placeholder="e.g. CPR Certification" autofocus></div>
+    <div class="form-group"><label>Category</label>
+      <input type="text" id="ci-cat" list="cat-list" placeholder="Administrative, Health, etc.">
+      <datalist id="cat-list">${uniqueCats.map(c=>`<option>${c}</option>`).join('')}</datalist>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewChecklistItem()">Add</button>
+    </div>`);
+}
+function saveNewChecklistItem() {
+  const name = document.getElementById('ci-name').value.trim();
+  if(!name){toast('Name required','error');return;}
+  S.checklist.push({id:uid(),name,category:document.getElementById('ci-cat').value||'Other',done:false});
+  saveState(); closeModalNow(); renderChecklist(); toast('Item added');
+}
+function editChecklistItem(id) {
+  const item = S.checklist.find(c=>c.id===id);
+  if(!item) return;
+  openModal(`<div class="modal-title">Edit Item</div>
+    <div class="form-group" style="margin-bottom:10px"><label>Item Name</label><input type="text" id="ei-name" value="${item.name}"></div>
+    <div class="form-group"><label>Category</label><input type="text" id="ei-cat" value="${item.category}"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditChecklist('${id}')">Save</button>
+    </div>`);
+}
+function saveEditChecklist(id) {
+  const item = S.checklist.find(c=>c.id===id);
+  item.name = document.getElementById('ei-name').value.trim();
+  item.category = document.getElementById('ei-cat').value;
+  saveState(); closeModalNow(); renderChecklist(); toast('Updated');
+}
+function deleteChecklistItem(id) {
+  S.checklist = S.checklist.filter(c=>c.id!==id);
+  saveState(); renderChecklist(); toast('Deleted','error');
+}
+
+// ============================================================
+// GPA
+// ============================================================
+function renderGpa() {
+  const termSelect = document.getElementById('gpa-term-select');
+  if(termSelect) termSelect.innerHTML = '<option value="">—</option>' + S.terms.map(t=>`<option value="${t.id}">${t.name} ${t.year}</option>`).join('');
+
+  const gpa = calcGpa(S.gpaCourses);
+  const bigEl = document.getElementById('gpa-big');
+  bigEl.textContent = gpa !== null ? gpa.toFixed(2) : '—';
+  bigEl.className = 'gpa-big ' + (gpa!==null?gpaClass(gpa):'gpa-none');
+  document.getElementById('gpa-sub').textContent = S.gpaCourses.length ? `${S.gpaCourses.length} courses · ${S.gpaCourses.reduce((s,c)=>s+parseInt(c.credits),0)} credits` : 'No courses added';
+  document.getElementById('gpa-warn').style.display = (gpa!==null && gpa<3.0)?'block':'none';
+
+  const tbody = document.getElementById('gpa-tbody');
+  if(!S.gpaCourses.length){tbody.innerHTML=`<tr><td colspan="6" class="empty">No courses yet</td></tr>`;return;}
+  tbody.innerHTML = S.gpaCourses.map((c,i)=>`
+    <tr>
+      <td style="font-weight:500">${c.name}</td>
+      <td style="font-size:12px;color:var(--text3)">${c.termId?termLabel(c.termId):'—'}</td>
+      <td><span class="tag ${c.grade.startsWith('A')?'tag-green':c.grade.startsWith('B')?'tag-blue':c.grade.startsWith('C')?'tag-amber':'tag-red'}">${c.grade}</span></td>
+      <td style="font-family:var(--mono)">${c.credits}</td>
+      <td style="font-family:var(--mono);color:var(--text3)">${((GRADE_PTS[c.grade]||0)*c.credits).toFixed(1)}</td>
+      <td><button class="btn btn-icon btn-ghost btn-sm" onclick="removeGpaCourse(${i})" style="color:var(--red)">×</button></td>
+    </tr>`).join('');
+
+  // By-term breakdown
+  const termIds = [...new Set(S.gpaCourses.map(c=>c.termId).filter(Boolean))];
+  const byTermEl = document.getElementById('gpa-by-term');
+  if(termIds.length>1) {
+    byTermEl.innerHTML = `<div class="section-title" style="font-size:14px;margin-bottom:12px">Term Breakdown</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+      ${termIds.map(tid=>{
+        const tc = S.gpaCourses.filter(c=>c.termId===tid);
+        const tgpa = calcGpa(tc);
+        return `<div class="stat-card"><div class="stat-label">${termLabel(tid)}</div><div class="stat-value ${tgpa?gpaClass(tgpa):'gpa-none'}">${tgpa?tgpa.toFixed(2):'—'}</div><div class="stat-sub">${tc.length} courses</div></div>`;
+      }).join('')}
+      </div>`;
+  } else byTermEl.innerHTML='';
+}
+
+function addGpaCourse() {
+  const name = document.getElementById('gpa-name').value.trim();
+  if(!name){toast('Course name required','error');return;}
+  S.gpaCourses.push({name, grade:document.getElementById('gpa-grade').value, credits:parseInt(document.getElementById('gpa-credits').value), termId:document.getElementById('gpa-term-select').value});
+  saveState(); document.getElementById('gpa-name').value=''; renderGpa(); toast('Course added');
+}
+function removeGpaCourse(i) {
+  S.gpaCourses.splice(i,1);
+  saveState(); renderGpa();
+}
+function clearGpa() {
+  if(!confirm('Clear all GPA courses?')) return;
+  S.gpaCourses = [];
+  saveState(); renderGpa(); toast('GPA cleared','error');
+}
+
+// ============================================================
+// SEARCH
+// ============================================================
+function handleSearch(val) {
+  if(!val) return;
+  showPanel('classes');
+  renderClasses();
+}
+
+// ============================================================
+// EXPORT / IMPORT
+// ============================================================
+function showExport() {
+  const json = JSON.stringify(S, null, 2);
+  openModal(`<div class="modal-title">Export / Import Data</div>
+    <div style="margin-bottom:12px;font-size:13px;color:var(--text2)">Copy this JSON to back up your data, or paste new data to import.</div>
+    <div class="export-preview" id="export-data">${json.replace(/</g,'&lt;')}</div>
+    <div style="margin:10px 0;display:flex;gap:8px">
+      <button class="btn btn-primary btn-sm" onclick="copyExport()">Copy JSON</button>
+      <button class="btn btn-ghost btn-sm" onclick="downloadExport()">Download .json</button>
+    </div>
+    <div style="margin-top:14px">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:6px">Import (paste JSON below and click Import):</div>
+      <textarea id="import-data" style="height:80px" placeholder="Paste JSON here…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModalNow()">Close</button>
+      <button class="btn btn-primary" onclick="importData()">Import</button>
+    </div>`);
+}
+function copyExport() {
+  navigator.clipboard.writeText(JSON.stringify(S,null,2)).then(()=>toast('Copied to clipboard'));
+}
+function downloadExport() {
+  const a = document.createElement('a');
+  a.href = 'data:application/json,' + encodeURIComponent(JSON.stringify(S,null,2));
+  a.download = 'scf_planner_backup.json';
+  a.click();
+  toast('Downloaded');
+}
+function importData() {
+  try {
+    const d = JSON.parse(document.getElementById('import-data').value);
+    Object.assign(S, d);
+    saveState(); closeModalNow(); renderPanel(activePanel); toast('Data imported!');
+  } catch { toast('Invalid JSON','error'); }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+updateNavBadges();
+renderDashboard();
+
+// Init Google Sign-In
+window.addEventListener('load', () => {
+  const savedUser = localStorage.getItem('scf_guser');
+  if(savedUser) {
+    try { gUser = JSON.parse(savedUser); } catch {}
+  }
+  initGoogleSignin();
+});
+</script>
+</body>
+</html>
