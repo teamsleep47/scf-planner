@@ -462,6 +462,7 @@ textarea{resize:vertical;min-height:60px}
 
   /* ── Classes table → hidden, replaced by cards ── */
   .desktop-only{display:none !important}
+  #quick-links-bar{display:none !important}
   .mobile-only{display:block !important}
   /* mobile-only flex containers */
   .mobile-only.flex{display:flex !important}
@@ -526,19 +527,20 @@ textarea{resize:vertical;min-height:60px}
 
 /* Quick links */
 .quick-links-area{
-  display:flex;align-items:center;gap:2px;
+  display:flex;align-items:center;gap:4px;
   border-right:1px solid var(--border2);padding-right:12px;margin-right:4px;
+  min-width:60px;
 }
 .ql-link{
   display:inline-flex;align-items:center;gap:5px;
-  padding:5px 10px;border-radius:var(--r);
-  font-size:12px;font-weight:500;color:var(--text2);
+  padding:5px 11px;border-radius:var(--r);
+  font-size:12px;font-weight:500;color:var(--text);
   text-decoration:none;white-space:nowrap;
-  transition:all 0.15s;border:1px solid transparent;
-  font-family:var(--sans);background:none;cursor:pointer;
+  transition:all 0.15s;border:1px solid var(--border2);
+  font-family:var(--sans);background:var(--surface2);cursor:pointer;
 }
-.ql-link:hover{color:var(--accent);background:var(--accent-light,rgba(79,142,247,0.08));border-color:var(--accent-border,rgba(79,142,247,0.2))}
-.ql-link svg{opacity:0.4;flex-shrink:0}
+.ql-link:hover{color:var(--accent);background:rgba(79,142,247,0.1);border-color:rgba(79,142,247,0.3)}
+.ql-link svg{opacity:0.5;flex-shrink:0}
 .ql-edit-btn{
   width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;
   border-radius:5px;border:none;background:none;color:var(--text3);
@@ -858,7 +860,7 @@ body.edit-mode [data-editable]:focus{
   <div class="page-title" id="page-title">Dashboard</div>
   <div class="topbar-actions">
     <input type="text" class="search-input" placeholder="Search classes, prereqs…" id="global-search" oninput="handleSearch(this.value)">
-    <div class="quick-links-area desktop-only" id="quick-links-bar"></div>
+    <div class="quick-links-area" id="quick-links-bar"></div>
     <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">☀</button>
     <button class="btn btn-primary btn-sm" onclick="quickAdd()">+ Add Class</button>
   </div>
@@ -3162,7 +3164,7 @@ function renderQuickLinksBar() {
   if(!bar) return;
   if(!S.quickLinks) S.quickLinks = [];
   if(!S.quickLinks.length) {
-    bar.innerHTML = '<span class="ql-edit-btn" onclick="editQuickLinks()" title="Add links" style="opacity:0.6;font-size:16px">⊕</span>';
+    bar.innerHTML = '<button onclick="editQuickLinks()" title="Add quick links" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:var(--r);border:1px dashed var(--border2);background:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:var(--sans);transition:all 0.15s" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.color=\'var(--accent)\'" onmouseout="this.style.borderColor=\'\'  ;this.style.color=\'\'">⊕ Add Links</button>';
     return;
   }
   bar.innerHTML = S.quickLinks.map(l => `
@@ -3281,6 +3283,7 @@ function unlockApp() {
   initTheme();
   updateNavBadges();
   renderDashboard();
+  renderQuickLinksBar();
   // Sync checklist tab name
   const navEl = document.getElementById('nav-checklist');
   if(navEl && S.checklistTitle) {
