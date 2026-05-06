@@ -276,120 +276,187 @@ textarea{resize:vertical;min-height:60px}
 /* Export */
 .export-preview{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px;font-size:11px;font-family:var(--mono);color:var(--text3);max-height:200px;overflow-y:auto;white-space:pre;margin:10px 0}
 
-/* ── MOBILE BOTTOM NAV ── */
+/* ══ MOBILE SHELL (hidden on desktop) ══ */
 .mobile-nav{display:none}
 .mobile-topbar{display:none}
-.hamburger{display:none}
+.mobile-drawer{visibility:hidden;pointer-events:none}
+
+/* ══ MOBILE CARD (for mobile-only card views) ══ */
+.m-card{background:var(--surface);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.m-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.m-card-title{font-size:15px;font-weight:600}
+.m-card-meta{font-size:12px;color:var(--text3);font-family:var(--mono)}
+.m-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.m-row:last-child{border-bottom:none}
+.m-row-label{font-size:14px;font-weight:500;flex:1}
+.m-row-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.m-class-card{background:var(--surface);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+.m-class-title{font-size:15px;font-weight:600;margin-bottom:6px}
+.m-class-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.m-class-actions{display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--border)}
+.m-class-actions .btn{flex:1;justify-content:center;font-size:13px}
+.m-fab{position:fixed;bottom:80px;right:16px;z-index:90;width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:24px;display:none;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(79,142,247,0.4);cursor:pointer}
+.m-search{background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);padding:10px 14px;border-radius:var(--r);font-size:15px;width:100%;font-family:var(--sans);margin-bottom:14px}
+.m-search:focus{outline:none;border-color:var(--accent)}
+.m-search::placeholder{color:var(--text3)}
+.m-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);font-family:var(--mono);margin-bottom:8px;margin-top:20px}
+.m-section-label:first-child{margin-top:0}
+.m-checklist-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface);border:1.5px solid var(--border2);border-radius:var(--r-lg);margin-bottom:8px}
+.m-check{width:24px;height:24px;border:2px solid var(--border2);border-radius:6px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.m-check.checked{background:var(--green);border-color:var(--green)}
+.m-check.checked::after{content:'';display:block;width:5px;height:10px;border:2.5px solid #fff;border-top:none;border-left:none;transform:rotate(45deg) translateY(-1px)}
+.m-prereq-row{background:var(--surface);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:8px}
+.m-prereq-name{font-size:14px;font-weight:600;margin-bottom:8px}
+.m-prereq-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.m-stat{background:var(--surface);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:14px 16px;text-align:center}
+.m-stat-val{font-size:28px;font-weight:700;line-height:1;margin-bottom:4px}
+.m-stat-label{font-size:11px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.08em}
+.m-gpa-entry{background:var(--surface);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.m-gpa-name{flex:1;font-size:14px;font-weight:500}
+.m-gpa-right{display:flex;gap:8px;align-items:center;flex-shrink:0}
 
 @media(max-width:768px){
-  /* Hide desktop sidebar */
+  /* ── Layout ── */
   .sidebar{display:none}
+  .app{flex-direction:column;height:100vh;overflow:hidden}
+  .main{width:100%;flex:1;overflow:hidden;display:flex;flex-direction:column}
 
-  /* Full-width main */
-  .app{flex-direction:column}
-  .main{width:100%;height:100vh;overflow-y:auto}
-
-  /* Mobile top bar */
+  /* ── Mobile topbar ── */
   .mobile-topbar{
     display:flex;align-items:center;justify-content:space-between;
-    padding:12px 16px;background:var(--surface);
-    border-bottom:2px solid var(--border2);position:sticky;top:0;z-index:100;flex-shrink:0;
+    padding:0 16px;height:56px;background:var(--surface);
+    border-bottom:2px solid var(--border2);flex-shrink:0;
+    position:relative;z-index:50;
   }
-  .mobile-topbar-title{font-size:16px;font-weight:700;letter-spacing:-0.01em}
-  .mobile-topbar-actions{display:flex;gap:8px;align-items:center}
-  .mobile-menu-btn{background:none;border:1.5px solid var(--border2);color:var(--text2);
-    border-radius:var(--r);padding:6px 10px;font-size:16px;cursor:pointer;line-height:1}
+  .mobile-topbar-title{font-size:17px;font-weight:700;letter-spacing:-0.01em}
+  .mobile-topbar-actions{display:flex;gap:6px;align-items:center}
+  .mobile-menu-btn{
+    background:none;border:none;color:var(--text2);
+    padding:8px;font-size:20px;cursor:pointer;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    width:40px;height:40px;border-radius:var(--r);
+  }
+  .mobile-menu-btn:active{background:var(--surface2)}
 
-  /* Slide-out drawer */
+  /* ── Drawer ── */
   .mobile-drawer{
-    position:fixed;inset:0;z-index:200;display:flex;pointer-events:none;
+    display:flex;visibility:visible;position:fixed;inset:0;z-index:300;pointer-events:none;
   }
   .mobile-drawer.open{pointer-events:all}
   .mobile-drawer-backdrop{
-    position:absolute;inset:0;background:rgba(0,0,0,0.5);
-    opacity:0;transition:opacity 0.25s;
+    position:absolute;inset:0;background:rgba(0,0,0,0.55);
+    opacity:0;transition:opacity 0.22s;
   }
   .mobile-drawer.open .mobile-drawer-backdrop{opacity:1}
   .mobile-drawer-panel{
-    position:absolute;left:0;top:0;bottom:0;width:260px;
+    position:absolute;left:0;top:0;bottom:0;width:72%;max-width:300px;
     background:var(--surface);border-right:2px solid var(--border2);
     display:flex;flex-direction:column;overflow-y:auto;
-    transform:translateX(-100%);transition:transform 0.25s ease;
+    transform:translateX(-100%);transition:transform 0.25s cubic-bezier(.4,0,.2,1);
   }
   .mobile-drawer.open .mobile-drawer-panel{transform:translateX(0)}
 
-  /* Bottom nav bar */
+  /* ── Bottom nav ── */
   .mobile-nav{
-    display:flex;position:fixed;bottom:0;left:0;right:0;z-index:100;
+    display:flex;flex-shrink:0;
     background:var(--surface);border-top:2px solid var(--border2);
-    padding:4px 0 max(4px, env(safe-area-inset-bottom));
+    padding-bottom:env(safe-area-inset-bottom,4px);
   }
   .mobile-nav-item{
-    flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
-    padding:6px 2px;cursor:pointer;border:none;background:none;color:var(--text3);
-    font-size:10px;font-family:var(--sans);font-weight:500;transition:color 0.15s;
+    flex:1;display:flex;flex-direction:column;align-items:center;
+    gap:3px;padding:8px 4px;cursor:pointer;border:none;background:none;
+    color:var(--text3);font-size:10px;font-family:var(--sans);font-weight:600;
+    transition:color 0.15s;letter-spacing:0.02em;-webkit-tap-highlight-color:transparent;
   }
   .mobile-nav-item.active{color:var(--accent)}
-  .mobile-nav-icon{font-size:18px;line-height:1}
+  .mobile-nav-item.active .mobile-nav-icon{
+    background:rgba(79,142,247,0.12);border-radius:10px;
+  }
+  .mobile-nav-icon{font-size:20px;line-height:1;padding:4px 12px;border-radius:10px;transition:background 0.15s}
 
-  /* Panels */
-  .panel{padding:14px 14px 80px}
-  .grid2,.grid3,.grid4{grid-template-columns:1fr}
-  .stat-grid{grid-template-columns:repeat(2,1fr)}
-  .terms-container{flex-direction:column}
-  .term-card{width:100%;min-width:unset}
-
-  /* Hide desktop topbar on mobile */
+  /* ── Hide desktop chrome ── */
   .topbar{display:none}
-  .sync-bar{font-size:11px;padding:5px 12px}
+  .sync-bar{display:none}
+  .edit-mode-bar{display:none !important}
 
-  /* Modal bottom sheet on mobile */
-  .modal-overlay{padding:0;align-items:flex-end;background:rgba(0,0,0,0.65)}
-  .modal{max-width:100%;width:100%;border-radius:16px 16px 0 0;max-height:88vh;padding:20px 18px 32px}
-  .modal-title{font-size:17px}
+  /* ── Panel scroll area ── */
+  .panel{
+    display:none;padding:16px 16px 24px;
+    flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  }
+  .panel.active{display:block}
 
-  /* Calendar week view scroll */
-  .cal-week-strip{grid-template-columns:repeat(7,minmax(100px,1fr));overflow-x:auto}
+  /* ── FAB ── */
+  .m-fab{display:flex}
 
-  /* Edit mode indicator mobile */
-  .edit-mode-bar{font-size:12px;padding:8px 14px}
+  /* ── Grids ── */
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .m-stat{box-shadow:var(--shadow)}
 
-  /* Always show chip actions on mobile */
-  .class-chip-actions{opacity:1 !important}
-  .class-chip-actions .btn-icon{padding:6px 10px;font-size:15px}
+  /* ── Terms ── */
+  .terms-container{flex-direction:column;gap:12px}
+  .term-card{width:100%;min-width:unset}
+  .inline-timeline-mobile{overflow-x:auto;padding-bottom:8px;margin-bottom:16px}
 
-  /* Bigger tap targets */
-  .btn{min-height:40px}
-  .btn-sm{min-height:36px}
-  .ci-check{width:24px;height:24px}
-  .filter-chip{padding:6px 14px;font-size:13px}
-  .nav-item{padding:12px 20px;font-size:15px}
-  .day-pill{padding:6px 12px;font-size:12px}
+  /* ── Classes table → hidden, replaced by cards ── */
+  .desktop-only{display:none !important}
+  .mobile-only{display:block !important}
 
-  /* Prereq selects bigger on mobile */
-  .data-table select{min-height:36px;font-size:14px}
-  .data-table td{padding:10px 8px}
+  /* ── Modals ── */
+  .modal-overlay{padding:0;align-items:flex-end;background:rgba(0,0,0,0.7)}
+  .modal{
+    width:100%;max-width:100%;border-radius:20px 20px 0 0;
+    max-height:92vh;padding:24px 20px max(24px,env(safe-area-inset-bottom));
+    overflow-y:auto;
+  }
+  .modal::before{
+    content:'';display:block;width:36px;height:4px;
+    background:var(--border2);border-radius:2px;
+    margin:0 auto 20px;
+  }
+  .modal-title{font-size:18px;margin-bottom:20px}
 
-  /* Bottom nav safe area */
-  .panel{padding-bottom:90px}
+  /* ── Tap targets ── */
+  .btn{min-height:44px}
+  .btn-sm{min-height:38px;padding:8px 14px}
+  .ci-check,.m-check{width:26px;height:26px}
+  .filter-chip{padding:8px 16px;font-size:13px;min-height:38px}
+  .day-pill{padding:7px 14px;font-size:13px}
+  select,input[type=text],input[type=number],input[type=date],input[type=time],textarea{
+    font-size:16px !important;min-height:44px;
+  }
+  textarea{min-height:80px}
 
-  /* GPA grid stack */
+  /* ── Cards ── */
+  .card{padding:16px;overflow:hidden}
+  .card-sm{padding:12px}
+
+  /* ── Calendar ── */
+  .cal-grid{gap:1px}
+  .cal-day{min-height:56px;padding:4px}
+  .cal-day-header{font-size:10px}
+  .cal-event{font-size:10px;padding:2px 4px}
+  .cal-week-strip{grid-template-columns:repeat(7,minmax(88px,1fr));gap:6px}
+
+  /* ── GPA ── */
   #gpa-grid{grid-template-columns:1fr}
 
-  /* Topbar search hidden on mobile */
-  .topbar .search-input{display:none}
+  /* ── Readiness banner ── */
+  .readiness-status{padding:14px 16px;font-size:14px}
 
-  /* Cal grid smaller on mobile */
-  .cal-grid{gap:1px}
-  .cal-day{min-height:52px;padding:3px}
-  .cal-event{font-size:9px;padding:1px 3px}
+  /* ── Section headers ── */
+  .section-header{margin-bottom:14px}
+  .section-title{font-size:16px}
 
-  /* Classes table scroll */
-  .card{overflow-x:auto}
-  .data-table{min-width:600px}
+  /* ── Term chip ── */
+  .class-chip-actions{opacity:1 !important}
+  .class-chip{padding:12px}
+  .class-chip-name{font-size:14px}
 
-  /* Search hidden on mobile topbar — accessed via drawer */
-  .search-input{width:140px;font-size:13px}
+  /* ── Prereq table on mobile → replaced ── */
+  .prereq-table-wrap{display:none}
+  .prereq-mobile-list{display:block}
 }
 
 /* Sync bar */
@@ -554,11 +621,13 @@ body.edit-mode [data-editable]:focus{
 
 <!-- MOBILE TOPBAR -->
 <div class="mobile-topbar">
-  <div class="mobile-topbar-title" id="mobile-page-title">Dashboard</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div id="mobile-sync-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0"></div>
+    <div class="mobile-topbar-title" id="mobile-page-title" onclick="mobileNav('dashboard')" style="cursor:pointer">Dashboard</div>
+  </div>
   <div class="mobile-topbar-actions">
-    <button class="mobile-menu-btn" onclick="quickAdd()" style="font-size:18px;font-weight:600">+</button>
-    <button class="mobile-menu-btn" onclick="toggleTheme()" id="mobile-theme-btn">☀</button>
-    <button class="mobile-menu-btn" onclick="openMobileDrawer()">☰</button>
+    <button class="mobile-menu-btn" onclick="toggleTheme()" id="mobile-theme-btn" title="Toggle theme">☀</button>
+    <button class="mobile-menu-btn" onclick="openMobileDrawer()" title="Menu">☰</button>
   </div>
 </div>
 
@@ -591,21 +660,24 @@ body.edit-mode [data-editable]:focus{
 <!-- MOBILE BOTTOM NAV -->
 <div class="mobile-nav">
   <button class="mobile-nav-item active" id="mnav-dashboard" onclick="mobileNav('dashboard')">
-    <span class="mobile-nav-icon">◈</span><span>Home</span>
+    <span class="mobile-nav-icon">🏠</span><span>Home</span>
   </button>
   <button class="mobile-nav-item" id="mnav-terms" onclick="mobileNav('terms')">
-    <span class="mobile-nav-icon">▦</span><span>Terms</span>
+    <span class="mobile-nav-icon">📋</span><span>Terms</span>
   </button>
   <button class="mobile-nav-item" id="mnav-classes" onclick="mobileNav('classes')">
-    <span class="mobile-nav-icon">◎</span><span>Classes</span>
+    <span class="mobile-nav-icon">📚</span><span>Classes</span>
   </button>
-  <button class="mobile-nav-item" id="mnav-calendar" onclick="mobileNav('calendar')">
-    <span class="mobile-nav-icon">◫</span><span>Calendar</span>
+  <button class="mobile-nav-item" id="mnav-prereqs" onclick="mobileNav('prereqs')">
+    <span class="mobile-nav-icon">✅</span><span>Prereqs</span>
   </button>
   <button class="mobile-nav-item" id="mnav-more" onclick="openMobileDrawer()">
-    <span class="mobile-nav-icon">⋯</span><span>More</span>
+    <span class="mobile-nav-icon">☰</span><span>More</span>
   </button>
 </div>
+
+<!-- MOBILE FAB -->
+<button class="m-fab" onclick="quickAdd()" aria-label="Add Class">+</button>
 
 <!-- TOPBAR -->
 <div id="sync-bar" class="sync-bar">
@@ -669,37 +741,47 @@ body.edit-mode [data-editable]:focus{
 
 <!-- ALL CLASSES -->
 <div class="panel" id="panel-classes">
-  <div class="section-header">
+  <div class="section-header desktop-only">
     <div><div class="section-title">All Classes</div></div>
-    <button class="btn btn-ghost btn-sm edit-toggle-btn" onclick="toggleEditMode()" id="edit-btn" title="Edit mode">✎ Edit</button>
-    <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">☀</button>
     <button class="btn btn-primary btn-sm" onclick="quickAdd()">+ Add Class</button>
   </div>
-  <div class="filter-row" id="class-filters"></div>
-  <div class="card" style="padding:0;overflow:hidden">
-    <table class="data-table" id="classes-table">
-      <thead><tr>
-        <th>Course Name</th><th>Category</th><th>Term</th><th>Status</th><th>Grade</th><th>Credits</th><th>Schedule</th><th></th>
-      </tr></thead>
-      <tbody id="classes-tbody"></tbody>
-    </table>
+  <!-- Desktop table view -->
+  <div class="desktop-only">
+    <div class="filter-row" id="class-filters"></div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="data-table" id="classes-table">
+        <thead><tr>
+          <th>Course Name</th><th>Category</th><th>Term</th><th>Status</th><th>Grade</th><th>Credits</th><th>Schedule</th><th></th>
+        </tr></thead>
+        <tbody id="classes-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <!-- Mobile card view -->
+  <div class="mobile-only" id="classes-mobile" style="display:none">
+    <input type="search" class="m-search" placeholder="Search classes…" id="mobile-class-search" oninput="renderMobileClasses()" onchange="renderMobileClasses()">
   </div>
 </div>
 
 <!-- PREREQS -->
 <div class="panel" id="panel-prereqs">
-  <div class="section-header">
+  <div class="section-header desktop-only">
     <div><div class="section-title">Prerequisites Master List</div></div>
     <button class="btn btn-primary btn-sm" onclick="addPrereq()">+ Add Prereq</button>
   </div>
-  <div class="card" style="padding:0;overflow:hidden">
-    <table class="data-table" id="prereqs-table">
-      <thead><tr>
-        <th>Course</th><th>Status</th><th>Linked Term</th><th>Notes</th><th></th>
-      </tr></thead>
-      <tbody id="prereqs-tbody"></tbody>
-    </table>
+  <!-- Desktop table -->
+  <div class="prereq-table-wrap">
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="data-table" id="prereqs-table">
+        <thead><tr>
+          <th>Course</th><th>Status</th><th>Linked Term</th><th>Notes</th><th></th>
+        </tr></thead>
+        <tbody id="prereqs-tbody"></tbody>
+      </table>
+    </div>
   </div>
+  <!-- Mobile list -->
+  <div class="prereq-mobile-list" id="prereqs-mobile" style="display:none"></div>
 </div>
 
 <!-- CHECKLIST -->
@@ -860,9 +942,13 @@ let syncTimeout = null;
 function setSyncStatus(status, msg) {
   const dot = document.getElementById('sync-dot');
   const label = document.getElementById('sync-label');
-  if(!dot) return;
-  dot.className = 'sync-dot ' + status;
-  label.textContent = msg;
+  if(dot) { dot.className = 'sync-dot ' + status; }
+  if(label) label.textContent = msg;
+  // Mobile sync dot
+  const mdot = document.getElementById('mobile-sync-dot');
+  if(mdot) {
+    mdot.style.background = status==='synced'?'var(--green)':status==='syncing'?'var(--amber)':status==='error'?'var(--red)':'var(--text3)';
+  }
 }
 
 function initGoogleSignin() {
@@ -1029,17 +1115,17 @@ function showPanel(id) {
   if(mt) mt.textContent = mTitles[id] || titles[id] || id;
   // Sync bottom nav active state
   document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
-  const bottomMap = {dashboard:'mnav-dashboard',terms:'mnav-terms',classes:'mnav-classes',calendar:'mnav-calendar'};
+  const bottomMap = {dashboard:'mnav-dashboard',terms:'mnav-terms',classes:'mnav-classes',calendar:'mnav-calendar',prereqs:'mnav-prereqs'};
   if(bottomMap[id]) document.getElementById(bottomMap[id])?.classList.add('active');
   renderPanel(id);
 }
 
 function renderPanel(id) {
-  if(id==='dashboard') renderDashboard();
+  if(id==='dashboard') { renderDashboard(); if(isMobile()) renderMobileDashboard(); }
   else if(id==='timeline') showPanel('terms');
   else if(id==='terms') renderTerms();
-  else if(id==='classes') renderClasses();
-  else if(id==='prereqs') renderPrereqs();
+  else if(id==='classes') { renderClasses(); renderMobileClasses(); }
+  else if(id==='prereqs') { renderPrereqs(); renderMobilePrereqs(); }
   else if(id==='checklist') renderChecklist();
   else if(id==='gpa') renderGpa();
   else if(id==='calendar') renderCalendar();
@@ -2133,6 +2219,127 @@ function saveClassDetail(id) {
 
 
 
+
+// ============================================================
+// MOBILE RENDER FUNCTIONS
+// ============================================================
+function isMobile() { return window.innerWidth <= 768; }
+
+function renderMobileClasses(filter) {
+  const el = document.getElementById('classes-mobile');
+  if(!el) return;
+  el.style.display = isMobile() ? 'block' : 'none';
+
+  let classes = S.classes;
+  if(filter && filter !== 'All') classes = classes.filter(c => c.category === filter || c.status === filter);
+  const search = (document.getElementById('mobile-class-search')?.value || document.getElementById('global-search')?.value || '').toLowerCase();
+  if(search) classes = classes.filter(c => c.name.toLowerCase().includes(search));
+
+  if(!classes.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">◎</div>No classes found.<br><button class="btn btn-primary" style="margin-top:12px" onclick="quickAdd()">+ Add Your First Class</button></div>';
+    return;
+  }
+
+  // Mobile filter chips
+  const cats = ['All', ...new Set(S.classes.map(c => c.category))];
+  const activeF = filter || activeFilter || 'All';
+  const filterHtml = `<div class="filter-row" style="overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px">
+    ${cats.map(c => `<button class="filter-chip ${activeF===c?'active':''}" onclick="renderClasses('${c}')">${c}</button>`).join('')}
+  </div>`;
+
+  const cards = classes.map(c => `
+    <div class="m-class-card">
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px">
+        <div class="class-chip-dot dot-${catColor(c.category)}" style="width:10px;height:10px;margin-top:5px;flex-shrink:0"></div>
+        <div style="flex:1">
+          <div class="m-class-title">${c.name}</div>
+          <div class="m-class-meta">
+            <span class="tag tag-gray">${c.category}</span>
+            <span class="tag tag-gray">${c.credits}cr</span>
+            ${statusTag(c.status)}
+            ${c.grade ? `<span class="tag tag-green">${c.grade}</span>` : ''}
+          </div>
+        </div>
+      </div>
+      ${c.days && c.days.length ? `<div style="font-size:12px;color:var(--text3);margin-bottom:6px">📅 ${c.days.join(', ')}${c.startTime?' · '+c.startTime:''}</div>` : ''}
+      ${c.teacherName ? `<div style="font-size:12px;color:var(--text3);margin-bottom:6px">👤 ${c.teacherName}</div>` : ''}
+      ${c.termId ? `<div style="font-size:12px;color:var(--text3);margin-bottom:6px">📆 ${termLabel(c.termId)}</div>` : ''}
+      <div class="m-class-actions">
+        <button class="btn btn-ghost btn-sm" onclick="viewClassDetail('${c.id}')">📅 Schedule</button>
+        <button class="btn btn-ghost btn-sm" onclick="editClass('${c.id}')">✎ Edit</button>
+        <button class="btn btn-ghost btn-sm" onclick="duplicateClass('${c.id}')">⎘</button>
+        <button class="btn btn-sm" style="background:var(--red-dim);color:var(--red);border:none" onclick="deleteClass('${c.id}')">✕</button>
+      </div>
+    </div>`).join('');
+
+  el.innerHTML = filterHtml + cards;
+}
+
+function renderMobilePrereqs() {
+  const el = document.getElementById('prereqs-mobile');
+  if(!el) return;
+  el.style.display = isMobile() ? 'block' : 'none';
+
+  const addBtn = `<button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:16px" onclick="addPrereq()">+ Add Prerequisite</button>`;
+
+  if(!S.prereqs.length) {
+    el.innerHTML = addBtn + '<div class="empty"><div class="empty-icon">✓</div>No prerequisites added yet.</div>';
+    return;
+  }
+
+  const rows = S.prereqs.map(p => {
+    const statusColors = {'Finished':'tag-green','Enrolled':'tag-blue','':'tag-gray'};
+    const statusLabel = p.status || 'Not Started';
+    return `<div class="m-prereq-row">
+      <div class="m-prereq-name">${p.name}</div>
+      <div class="m-prereq-controls">
+        <select onchange="updatePrereq('${p.id}','status',this.value)" style="flex:1;min-width:120px">
+          ${['','Enrolled','Finished'].map(s => `<option value="${s}" ${p.status===s?'selected':''}>${s||'Not Started'}</option>`).join('')}
+        </select>
+        <select onchange="updatePrereq('${p.id}','termId',this.value)" style="flex:1;min-width:120px">
+          <option value="">No Term</option>
+          ${S.terms.map(t => `<option value="${t.id}" ${p.termId===t.id?'selected':''}>${t.name} ${t.year}</option>`).join('')}
+        </select>
+        <button class="btn btn-sm" style="background:var(--red-dim);color:var(--red);border:none;flex-shrink:0" onclick="deletePrereq('${p.id}')">✕</button>
+      </div>
+      ${p.notes ? `<div style="font-size:12px;color:var(--text3);margin-top:8px">${p.notes}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  el.innerHTML = addBtn + rows;
+}
+
+function renderMobileDashboard() {
+  if(!isMobile()) return;
+
+  // Stats as 2-col grid
+  const totalClasses = S.classes.length;
+  const completed = S.classes.filter(c=>c.status==='Completed').length;
+  const totalCredits = S.classes.reduce((s,c)=>s+parseInt(c.credits||0),0);
+  const completedCredits = S.classes.filter(c=>c.status==='Completed').reduce((s,c)=>s+parseInt(c.credits||0),0);
+  const gpa = calcGpa(S.gpaCourses);
+  const prereqDone = S.prereqs.filter(p=>p.status==='Finished').length;
+
+  const statsEl = document.getElementById('dash-stats');
+  if(statsEl) statsEl.innerHTML = [
+    {label:'Classes',value:completed+'/'+totalClasses,cls:completed===totalClasses&&totalClasses>0?'var(--green)':'var(--text)'},
+    {label:'Credits',value:completedCredits+'/'+totalCredits,cls:'var(--text)'},
+    {label:'GPA',value:gpa?gpa.toFixed(2):'—',cls:gpa?(gpa>=3.0?'var(--green)':gpa>=2.0?'var(--amber)':'var(--red)'):'var(--text3)'},
+    {label:'Prereqs',value:prereqDone+'/'+S.prereqs.length,cls:prereqDone===S.prereqs.length&&S.prereqs.length>0?'var(--green)':'var(--text)'},
+  ].map(s=>`<div class="m-stat"><div class="m-stat-val" style="color:${s.cls}">${s.value}</div><div class="m-stat-label">${s.label}</div></div>`).join('');
+}
+
+// Mobile renders called from within renderPanel
+
+// Show/hide mobile-only elements based on screen size
+function syncMobileOnly() {
+  const mobile = isMobile();
+  document.querySelectorAll('.mobile-only').forEach(el => el.style.display = mobile ? 'block' : 'none');
+  document.querySelectorAll('.desktop-only').forEach(el => el.style.display = mobile ? 'none' : 'block');
+}
+
+window.addEventListener('resize', () => { syncMobileOnly(); renderPanel(activePanel); });
+
 // ============================================================
 // MOBILE NAV
 // ============================================================
@@ -2190,6 +2397,7 @@ function toggleEditMode() {
 // INIT
 // ============================================================
 initTheme();
+syncMobileOnly();
 updateNavBadges();
 renderDashboard();
 
