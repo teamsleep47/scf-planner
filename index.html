@@ -149,9 +149,12 @@ textarea{resize:vertical;min-height:60px}
 .class-chip-info{flex:1;min-width:0}
 .class-chip-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .class-chip-meta{display:flex;gap:6px;margin-top:3px;flex-wrap:wrap}
-.class-chip-actions{display:flex;gap:2px;opacity:0.4;transition:opacity 0.15s}
+.class-chip-actions{display:flex;gap:2px;opacity:0;transition:opacity 0.15s}
 .class-chip:hover .class-chip-actions{opacity:1}
-.class-chip-actions .btn-icon{font-size:14px;padding:4px 7px}
+.chip-action-btn{font-size:13px;padding:4px 7px;line-height:1}
+.class-chip::after{content:'double-click to edit';position:absolute;bottom:4px;right:8px;font-size:9px;color:var(--text3);opacity:0;transition:opacity 0.2s;pointer-events:none;font-family:var(--mono)}
+.class-chip:hover::after{opacity:1}
+.class-chip{position:relative}
 .drop-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:14px;text-align:center;font-size:12px;color:var(--text3);display:none}
 .drop-zone.active{display:block;background:rgba(79,142,247,0.04)}
 .term-add{padding:10px;padding-top:4px}
@@ -272,6 +275,19 @@ textarea{resize:vertical;min-height:60px}
 .collapsible-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:10px 0;user-select:none}
 .collapsible-toggle{color:var(--text3);transition:transform 0.2s}
 .collapsible-toggle.open{transform:rotate(90deg)}
+
+/* Drag-sort rows */
+.sortable-row{transition:background 0.15s}
+.sortable-row.drag-over-top{border-top:2px solid var(--accent) !important}
+.sortable-row.drag-over-bottom{border-bottom:2px solid var(--accent) !important}
+.sortable-row.dragging-row{opacity:0.4}
+.drag-handle{cursor:grab;color:var(--text3);padding:0 8px 0 2px;font-size:16px;line-height:1;flex-shrink:0;user-select:none}
+.drag-handle:active{cursor:grabbing}
+.drag-handle:hover{color:var(--text2)}
+
+/* Classes table drag sort */
+.class-row-dragging{opacity:0.4}
+.class-row-drag-over{border-top:2px solid var(--accent)}
 
 /* Export */
 .export-preview{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px;font-size:11px;font-family:var(--mono);color:var(--text3);max-height:200px;overflow-y:auto;white-space:pre;margin:10px 0}
@@ -773,7 +789,7 @@ body.edit-mode [data-editable]:focus{
     <div class="card" style="padding:0;overflow:hidden">
       <table class="data-table" id="classes-table">
         <thead><tr>
-          <th>Course Name</th><th>Category</th><th>Term</th><th>Status</th><th>Grade</th><th>Credits</th><th>Schedule</th><th></th>
+          <th style="width:32px"></th><th>Course Name</th><th>Category</th><th>Term</th><th>Status</th><th>Grade</th><th>Credits</th><th>Schedule</th><th></th>
         </tr></thead>
         <tbody id="classes-tbody"></tbody>
       </table>
@@ -796,7 +812,7 @@ body.edit-mode [data-editable]:focus{
     <div class="card" style="padding:0;overflow:hidden">
       <table class="data-table" id="prereqs-table">
         <thead><tr>
-          <th>Course</th><th>Status</th><th>Linked Term</th><th>Notes</th><th></th>
+          <th style="width:32px"></th><th>Course</th><th>Status</th><th>Linked Term</th><th>Notes</th><th></th>
         </tr></thead>
         <tbody id="prereqs-tbody"></tbody>
       </table>
@@ -1534,12 +1550,14 @@ function addTerm() {
 // ============================================================
 // CLASSES
 // ============================================================
+let dragClassRowId = null;
+
 function renderClasses(filter) {
-  // Build filter chips
   const cats = ['All', ...new Set(S.classes.map(c=>c.category))];
   const statuses = ['All','Not Started','Enrolled','Completed'];
   if(filter !== undefined) activeFilter = filter;
-  document.getElementById('class-filters').innerHTML =
+  const filtersEl = document.getElementById('class-filters');
+  if(filtersEl) filtersEl.innerHTML =
     cats.map(c=>`<button class="filter-chip ${activeFilter===c?'active':''}" onclick="renderClasses('${c}')">${c}</button>`).join('') +
     `<span style="color:var(--border2);margin:0 4px">|</span>` +
     statuses.slice(1).map(s=>`<button class="filter-chip ${activeFilter===s?'active':''}" onclick="renderClasses('${s}')">${s}</button>`).join('');
@@ -1548,15 +1566,25 @@ function renderClasses(filter) {
   if(activeFilter && activeFilter!=='All') {
     classes = classes.filter(c=>c.category===activeFilter||c.status===activeFilter);
   }
-  const search = document.getElementById('global-search')?.value?.toLowerCase()||'';
+  const search = (document.getElementById('mobile-class-search')?.value || document.getElementById('global-search')?.value || '').toLowerCase();
   if(search) classes = classes.filter(c=>c.name.toLowerCase().includes(search));
 
   const tbody = document.getElementById('classes-tbody');
-  if(!classes.length){tbody.innerHTML=`<tr><td colspan="8" class="empty">No classes found</td></tr>`;return;}
+  if(!tbody) return;
+  if(!classes.length){tbody.innerHTML=`<tr><td colspan="9" class="empty">No classes found</td></tr>`;return;}
   tbody.innerHTML = classes.map(c=>`
-    <tr>
+    <tr class="sortable-row" data-id="${c.id}" draggable="true"
+      ondragstart="classRowDragStart(event,'${c.id}')"
+      ondragend="classRowDragEnd(event)"
+      ondragover="classRowDragOver(event,'${c.id}')"
+      ondrop="classRowDrop(event,'${c.id}')"
+      ondblclick="editClass('${c.id}')"
+      style="cursor:default">
+      <td style="width:32px;padding-left:8px">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
+      </td>
       <td><span style="font-weight:500">${c.name}</span></td>
-      <td><span class="tag" style="background:var(--${catColor(c.category)}-dim,var(--surface3));color:var(--${catColor(c.category)},var(--text2))">${c.category}</span></td>
+      <td><span class="tag tag-gray">${c.category}</span></td>
       <td style="font-size:12px;color:var(--text3)">${termLabel(c.termId)}</td>
       <td>${statusTag(c.status)}</td>
       <td><span style="font-family:var(--mono);font-size:13px;color:var(--text2)">${c.grade||'—'}</span></td>
@@ -1565,18 +1593,54 @@ function renderClasses(filter) {
         ${c.days&&c.days.length?'<div style="font-size:11px;margin-bottom:2px">📅 '+c.days.join(', ')+'</div>':''}
         ${c.startTime?'<div style="font-size:11px;font-family:var(--mono)">'+c.startTime+(c.endTime?' – '+c.endTime:'')+'</div>':''}
         ${c.teacherName?'<div style="font-size:11px;margin-top:2px">👤 '+c.teacherName+'</div>':''}
-        ${!c.days?.length&&!c.teacherName?`<button class="btn btn-ghost btn-sm" onclick="viewClassDetail('${c.id}')" style="font-size:11px;opacity:0.6">+ Add</button>`:''}
-
+        ${!c.days?.length&&!c.teacherName?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();viewClassDetail('${c.id}')" style="font-size:11px;opacity:0.6">+ Add</button>`:''}
       </td>
       <td>
-        <div style="display:flex;gap:4px;flex-wrap:wrap">
-          <button class="btn btn-ghost btn-sm" onclick="viewClassDetail('${c.id}')" title="Schedule & Contact" style="font-size:12px">📅</button>
-          <button class="btn btn-icon btn-ghost btn-sm" onclick="editClass('${c.id}')">✎</button>
-          <button class="btn btn-icon btn-ghost btn-sm" onclick="duplicateClass('${c.id}')">⎘</button>
-          <button class="btn btn-icon btn-ghost btn-sm" onclick="deleteClass('${c.id}')" style="color:var(--red)">×</button>
+        <div style="display:flex;gap:4px;flex-wrap:nowrap">
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();viewClassDetail('${c.id}')" title="Schedule & Contact" style="font-size:12px;min-height:unset;padding:4px 8px">📅</button>
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="event.stopPropagation();editClass('${c.id}')" style="min-height:unset">✎</button>
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="event.stopPropagation();duplicateClass('${c.id}')" style="min-height:unset">⎘</button>
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="event.stopPropagation();deleteClass('${c.id}')" style="color:var(--red);min-height:unset">×</button>
         </div>
       </td>
     </tr>`).join('');
+}
+
+function classRowDragStart(e, id) {
+  dragClassRowId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => e.target.closest('tr')?.classList.add('dragging-row'), 0);
+}
+function classRowDragEnd(e) {
+  dragClassRowId = null;
+  document.querySelectorAll('.sortable-row').forEach(r =>
+    r.classList.remove('dragging-row','drag-over-top','drag-over-bottom'));
+}
+function classRowDragOver(e, id) {
+  e.preventDefault();
+  if(dragClassRowId === id) return;
+  const row = e.currentTarget;
+  const rect = row.getBoundingClientRect();
+  const mid = rect.top + rect.height / 2;
+  document.querySelectorAll('.sortable-row').forEach(r =>
+    r.classList.remove('drag-over-top','drag-over-bottom'));
+  row.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-bottom');
+}
+function classRowDrop(e, targetId) {
+  e.preventDefault();
+  if(!dragClassRowId || dragClassRowId === targetId) return;
+  const row = e.currentTarget;
+  const rect = row.getBoundingClientRect();
+  const before = e.clientY < rect.top + rect.height / 2;
+  const fromIdx = S.classes.findIndex(c=>c.id===dragClassRowId);
+  const toIdx = S.classes.findIndex(c=>c.id===targetId);
+  const [moved] = S.classes.splice(fromIdx, 1);
+  const insertAt = before ? toIdx : toIdx + (fromIdx < toIdx ? 0 : 1);
+  S.classes.splice(Math.max(0, fromIdx < toIdx ? insertAt - 1 : insertAt), 0, moved);
+  saveState();
+  renderClasses();
+  renderMobileClasses();
+  toast('Class reordered');
 }
 
 function quickAdd() { quickAddToTerm(''); }
@@ -1643,8 +1707,9 @@ function editClass(id) {
       <div class="form-group flex1"><label>Grade</label><input type="text" id="ec-grade" value="${c.grade}" maxlength="3"></div>
     </div>
     <div class="form-group"><label>Notes</label><textarea id="ec-notes">${c.notes||''}</textarea></div>
-    <div class="modal-footer">
+    <div class="modal-footer" style="flex-wrap:wrap;gap:8px">
       <button class="btn btn-danger btn-sm" onclick="deleteClass('${id}');closeModalNow()">Delete</button>
+      <button class="btn btn-ghost btn-sm" onclick="saveEditClass('${id}');setTimeout(()=>viewClassDetail('${id}'),100)" style="margin-right:auto">📅 Schedule & Contact</button>
       <button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>
       <button class="btn btn-primary" onclick="saveEditClass('${id}')">Save</button>
     </div>`);
@@ -1679,11 +1744,21 @@ function deleteClass(id) {
 // ============================================================
 // PREREQUISITES
 // ============================================================
+let dragPrereqId = null;
+
 function renderPrereqs() {
   const tbody = document.getElementById('prereqs-tbody');
-  if(!S.prereqs.length){tbody.innerHTML=`<tr><td colspan="5" class="empty">No prerequisites. <button class="btn btn-ghost btn-sm" onclick="addPrereq()">Add one</button></td></tr>`;return;}
+  if(!S.prereqs.length){tbody.innerHTML=`<tr><td colspan="6" class="empty">No prerequisites. <button class="btn btn-ghost btn-sm" onclick="addPrereq()">Add one</button></td></tr>`;return;}
   tbody.innerHTML = S.prereqs.map(p=>`
-    <tr>
+    <tr class="sortable-row" data-id="${p.id}"
+      draggable="true"
+      ondragstart="prereqDragStart(event,'${p.id}')"
+      ondragend="prereqDragEnd(event)"
+      ondragover="prereqDragOver(event,'${p.id}')"
+      ondrop="prereqDrop(event,'${p.id}')">
+      <td style="width:32px;padding-left:8px">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
+      </td>
       <td><span style="font-weight:500;cursor:pointer" onclick="editPrereqCell('${p.id}','name',this)">${p.name}</span></td>
       <td>
         <select onchange="updatePrereq('${p.id}','status',this.value)" style="background:transparent;border:none;font-size:13px;color:var(--text2);cursor:pointer;padding:2px">
@@ -1699,6 +1774,45 @@ function renderPrereqs() {
       <td><span style="font-size:12px;color:var(--text3);cursor:pointer" onclick="editPrereqCell('${p.id}','notes',this)">${p.notes||'—'}</span></td>
       <td><button class="btn btn-icon btn-ghost" onclick="deletePrereq('${p.id}')" style="color:var(--red)">×</button></td>
     </tr>`).join('');
+}
+
+function prereqDragStart(e, id) {
+  dragPrereqId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => e.target.closest('tr')?.classList.add('dragging-row'), 0);
+}
+function prereqDragEnd(e) {
+  dragPrereqId = null;
+  document.querySelectorAll('.sortable-row').forEach(r => {
+    r.classList.remove('dragging-row','drag-over-top','drag-over-bottom');
+  });
+}
+function prereqDragOver(e, id) {
+  e.preventDefault();
+  if(dragPrereqId === id) return;
+  const row = e.currentTarget;
+  const rect = row.getBoundingClientRect();
+  const mid = rect.top + rect.height / 2;
+  document.querySelectorAll('.sortable-row').forEach(r => r.classList.remove('drag-over-top','drag-over-bottom'));
+  row.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-bottom');
+}
+function prereqDrop(e, targetId) {
+  e.preventDefault();
+  if(!dragPrereqId || dragPrereqId === targetId) return;
+  const row = e.currentTarget;
+  const rect = row.getBoundingClientRect();
+  const mid = rect.top + rect.height / 2;
+  const before = e.clientY < mid;
+  const fromIdx = S.prereqs.findIndex(p=>p.id===dragPrereqId);
+  const toIdx = S.prereqs.findIndex(p=>p.id===targetId);
+  const [moved] = S.prereqs.splice(fromIdx, 1);
+  const insertAt = before ? toIdx : toIdx + (fromIdx < toIdx ? 0 : 1);
+  S.prereqs.splice(Math.max(0, fromIdx < toIdx ? insertAt - 1 : insertAt), 0, moved);
+  saveState();
+  renderPrereqs();
+  renderMobilePrereqs();
+  renderDashPrereqs(); // reflect order on dashboard
+  toast('Prerequisite reordered');
 }
 
 function updatePrereq(id, field, val) {
@@ -1749,7 +1863,28 @@ function saveNewPrereq() {
 function deletePrereq(id) {
   if(!confirm('Delete this prerequisite?')) return;
   S.prereqs = S.prereqs.filter(p=>p.id!==id);
-  saveState(); renderPrereqs(); toast('Deleted','error');
+  saveState(); renderPrereqs(); renderMobilePrereqs(); renderDashPrereqs(); toast('Deleted','error');
+}
+
+function movePrereq(idx, dir) {
+  const newIdx = idx + dir;
+  if(newIdx < 0 || newIdx >= S.prereqs.length) return;
+  const [item] = S.prereqs.splice(idx, 1);
+  S.prereqs.splice(newIdx, 0, item);
+  saveState(); renderPrereqs(); renderMobilePrereqs(); renderDashPrereqs(); toast('Reordered');
+}
+
+function moveClassById(id, dir) {
+  const idx = S.classes.findIndex(c=>c.id===id);
+  moveClass(idx, dir);
+}
+
+function moveClass(idx, dir) {
+  const newIdx = idx + dir;
+  if(newIdx < 0 || newIdx >= S.classes.length) return;
+  const [item] = S.classes.splice(idx, 1);
+  S.classes.splice(newIdx, 0, item);
+  saveState(); renderClasses(); renderMobileClasses(); toast('Reordered');
 }
 
 // ============================================================
@@ -2270,7 +2405,11 @@ function renderMobileClasses(filter) {
   const cards = classes.map(c => `
     <div class="m-class-card">
       <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px">
-        <div class="class-chip-dot dot-${catColor(c.category)}" style="width:10px;height:10px;margin-top:5px;flex-shrink:0"></div>
+        <div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0;padding-top:2px">
+          <button style="background:var(--surface2);border:1px solid var(--border2);color:var(--text3);border-radius:6px;padding:2px 7px;font-size:13px;cursor:pointer;min-height:unset" onclick="moveClassById('${c.id}',-1)">↑</button>
+          <button style="background:var(--surface2);border:1px solid var(--border2);color:var(--text3);border-radius:6px;padding:2px 7px;font-size:13px;cursor:pointer;min-height:unset" onclick="moveClassById('${c.id}',1)">↓</button>
+        </div>
+        <div class="class-chip-dot dot-${catColor(c.category)}" style="width:10px;height:10px;margin-top:6px;flex-shrink:0"></div>
         <div style="flex:1">
           <div class="m-class-title">${c.name}</div>
           <div class="m-class-meta">
@@ -2284,7 +2423,7 @@ function renderMobileClasses(filter) {
       ${c.days && c.days.length ? `<div style="font-size:12px;color:var(--text3);margin-bottom:6px">📅 ${c.days.join(', ')}${c.startTime?' · '+c.startTime:''}</div>` : ''}
       ${c.teacherName ? `<div style="font-size:12px;color:var(--text3);margin-bottom:6px">👤 ${c.teacherName}</div>` : ''}
       ${c.termId ? `<div style="font-size:12px;color:var(--text3);margin-bottom:6px">📆 ${termLabel(c.termId)}</div>` : ''}
-      <div class="m-class-actions">
+      <div class="m-class-actions" style="flex-wrap:wrap">
         <button class="btn btn-ghost btn-sm" onclick="viewClassDetail('${c.id}')">📅 Schedule</button>
         <button class="btn btn-ghost btn-sm" onclick="editClass('${c.id}')">✎ Edit</button>
         <button class="btn btn-ghost btn-sm" onclick="duplicateClass('${c.id}')">⎘</button>
@@ -2305,22 +2444,28 @@ function renderMobilePrereqs() {
     return;
   }
 
-  const rows = S.prereqs.map(p => {
-    const statusColors = {'Finished':'tag-green','Enrolled':'tag-blue','':'tag-gray'};
-    const statusLabel = p.status || 'Not Started';
-    return `<div class="m-prereq-row">
-      <div class="m-prereq-name">${p.name}</div>
-      <div class="m-prereq-controls">
-        <select onchange="updatePrereq('${p.id}','status',this.value)" style="flex:1;min-width:120px">
-          ${['','Enrolled','Finished'].map(s => `<option value="${s}" ${p.status===s?'selected':''}>${s||'Not Started'}</option>`).join('')}
-        </select>
-        <select onchange="updatePrereq('${p.id}','termId',this.value)" style="flex:1;min-width:120px">
-          <option value="">No Term</option>
-          ${S.terms.map(t => `<option value="${t.id}" ${p.termId===t.id?'selected':''}>${t.name} ${t.year}</option>`).join('')}
-        </select>
-        <button class="btn btn-sm" style="background:var(--red-dim);color:var(--red);border:none;flex-shrink:0" onclick="deletePrereq('${p.id}')">✕</button>
+  const rows = S.prereqs.map((p, idx) => {
+    return `<div class="m-prereq-row" style="position:relative">
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+        <div style="display:flex;flex-direction:column;gap:4px;padding-top:2px">
+          <button class="btn btn-sm" style="padding:3px 8px;min-height:unset;font-size:14px;background:var(--surface2);border:1px solid var(--border2);color:var(--text3)" onclick="movePrereq(${idx},-1)" ${idx===0?'disabled':''}>↑</button>
+          <button class="btn btn-sm" style="padding:3px 8px;min-height:unset;font-size:14px;background:var(--surface2);border:1px solid var(--border2);color:var(--text3)" onclick="movePrereq(${idx},1)" ${idx===S.prereqs.length-1?'disabled':''}>↓</button>
+        </div>
+        <div style="flex:1">
+          <div class="m-prereq-name">${p.name}</div>
+          <div class="m-prereq-controls">
+            <select onchange="updatePrereq('${p.id}','status',this.value)" style="flex:1;min-width:110px">
+              ${['','Enrolled','Finished'].map(s => `<option value="${s}" ${p.status===s?'selected':''}>${s||'Not Started'}</option>`).join('')}
+            </select>
+            <select onchange="updatePrereq('${p.id}','termId',this.value)" style="flex:1;min-width:110px">
+              <option value="">No Term</option>
+              ${S.terms.map(t => `<option value="${t.id}" ${p.termId===t.id?'selected':''}>${t.name} ${t.year}</option>`).join('')}
+            </select>
+            <button class="btn btn-sm" style="background:var(--red-dim);color:var(--red);border:none;flex-shrink:0;min-height:unset;padding:6px 10px" onclick="deletePrereq('${p.id}')">✕</button>
+          </div>
+          ${p.notes ? `<div style="font-size:12px;color:var(--text3);margin-top:6px">${p.notes}</div>` : ''}
+        </div>
       </div>
-      ${p.notes ? `<div style="font-size:12px;color:var(--text3);margin-top:8px">${p.notes}</div>` : ''}
     </div>`;
   }).join('');
 
