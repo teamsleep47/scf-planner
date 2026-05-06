@@ -1141,53 +1141,44 @@ function doSignIn() {
 
 function runTokenClient() {
   setBtnState('loading');
+  // Use prompt:'' if we've authed before (avoids repeat consent screen)
+  // Only use 'select_account' on very first sign-in (no saved user)
+  const hasUser = !!localStorage.getItem('scf_guser');
   try {
     const tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID,
       scope: SCOPES,
       callback: async (resp) => {
         if(resp.access_token) {
-          // We have a token — now get user info via ID token
-          google.accounts.id.initialize({
-            client_id: CLIENT_ID,
-            callback: async (credResp) => {
-              const payload = JSON.parse(atob(credResp.credential.split('.')[1]));
-              gUser = { name: payload.name, email: payload.email, picture: payload.picture };
-              localStorage.setItem('scf_guser', JSON.stringify(gUser));
-              gDriveToken = resp.access_token;
-              saveTokenToSession(resp.access_token);
-              localStorage.setItem('scf_token_expiry', Date.now() + 3500000);
-              setBtnState('idle');
-              unlockApp();
-              renderSyncBar();
-              await loadFromDrive();
-              scheduleTokenRefresh();
-            },
-            auto_select: true,
-          });
-          // If we already have user info saved, skip ID token step
-          const savedUser = localStorage.getItem('scf_guser');
-          if(savedUser) {
-            try { gUser = JSON.parse(savedUser); } catch {}
-            gDriveToken = resp.access_token;
-            saveTokenToSession(resp.access_token);
-            localStorage.setItem('scf_token_expiry', Date.now() + 3500000);
-            setBtnState('idle');
-            unlockApp();
-            renderSyncBar();
-            await loadFromDrive();
-            scheduleTokenRefresh();
-          } else {
-            // Prompt for ID token to get user info
-            google.accounts.id.prompt();
+          gDriveToken = resp.access_token;
+          saveTokenToSession(resp.access_token);
+          localStorage.setItem('scf_token_expiry', Date.now() + 3500000);
+          // Get user info from token via userinfo endpoint (no extra prompt)
+          try {
+            const uRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+              headers: { Authorization: 'Bearer ' + resp.access_token }
+            });
+            const uData = await uRes.json();
+            gUser = { name: uData.name, email: uData.email, picture: uData.picture };
+            localStorage.setItem('scf_guser', JSON.stringify(gUser));
+          } catch(e) {
+            // userinfo failed — use saved user if available
+            const saved = localStorage.getItem('scf_guser');
+            if(saved) try { gUser = JSON.parse(saved); } catch {}
           }
+          setBtnState('idle');
+          unlockApp();
+          renderSyncBar();
+          await loadFromDrive();
+          scheduleTokenRefresh();
         } else {
           setBtnState('error');
           setTimeout(() => setBtnState('idle'), 3000);
         }
       }
     });
-    tokenClient.requestAccessToken({ prompt: 'consent' });
+    // prompt:'' = no UI if already consented; 'select_account' only on first visit
+    tokenClient.requestAccessToken({ prompt: hasUser ? '' : 'select_account' });
   } catch(e) {
     setBtnState('error');
     setTimeout(() => setBtnState('idle'), 3000);
@@ -1245,7 +1236,7 @@ async function trySilentAuth() {
 }
 
 async function handleCredential(response) {
-  // Updates user profile info from ID token
+  // Called if GSI ID token flow is used — updates user profile
   try {
     const payload = JSON.parse(atob(response.credential.split('.')[1]));
     gUser = { name: payload.name, email: payload.email, picture: payload.picture };
