@@ -149,12 +149,12 @@ textarea{resize:vertical;min-height:60px}
 .class-chip-info{flex:1;min-width:0}
 .class-chip-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .class-chip-meta{display:flex;gap:6px;margin-top:3px;flex-wrap:wrap}
-.class-chip-actions{display:flex;gap:2px;opacity:0;transition:opacity 0.15s}
+.class-chip{position:relative;cursor:grab}
+.class-chip:hover{border-color:var(--accent);background:var(--surface3)}
+.class-chip-actions{display:flex;gap:2px;opacity:0;transition:opacity 0.15s;flex-direction:column}
 .class-chip:hover .class-chip-actions{opacity:1}
-.chip-action-btn{font-size:13px;padding:4px 7px;line-height:1}
-.class-chip::after{content:'double-click to edit';position:absolute;bottom:4px;right:8px;font-size:9px;color:var(--text3);opacity:0;transition:opacity 0.2s;pointer-events:none;font-family:var(--mono)}
-.class-chip:hover::after{opacity:1}
-.class-chip{position:relative}
+.class-chip::after{content:'↩ dbl-click to edit';position:absolute;bottom:3px;right:6px;font-size:9px;color:var(--text3);opacity:0;transition:opacity 0.2s;pointer-events:none;font-family:var(--mono);letter-spacing:0.03em}
+.class-chip:hover::after{opacity:0.7}
 .drop-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:14px;text-align:center;font-size:12px;color:var(--text3);display:none}
 .drop-zone.active{display:block;background:rgba(79,142,247,0.04)}
 .term-add{padding:10px;padding-top:4px}
@@ -554,6 +554,16 @@ body.light .checklist-item{background:var(--surface2);border-color:var(--border)
 body.light .nav-item.active{background:rgba(37,99,235,0.08)}
 body.light .sync-bar{background:var(--surface2)}
 
+/* Calendar day exceptions */
+.cal-day-clickable{cursor:pointer}
+.cal-day-clickable:hover{border-color:var(--accent);background:rgba(79,142,247,0.04)}
+.exception-badge{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--amber);margin-left:3px;vertical-align:middle}
+.exc-row{display:flex;align-items:flex-start;gap:10px;padding:12px;background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r);margin-bottom:8px}
+.exc-row.cancelled{background:var(--red-dim);border-color:rgba(240,96,96,0.25)}
+.exc-date-label{font-size:12px;font-weight:700;font-family:var(--mono);color:var(--text2);min-width:72px;padding-top:2px}
+.exc-fields{flex:1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.exc-note{font-size:12px;color:var(--text3);margin-top:4px;font-style:italic}
+
 /* Calendar */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:8px}
 .cal-day-header{text-align:center;font-size:10px;font-weight:600;color:var(--text3);font-family:var(--mono);padding:4px 0;text-transform:uppercase}
@@ -934,14 +944,14 @@ const DEFAULTS = {
     {id:'t6',name:'Spring',year:2028,isCurrent:false,notes:''}
   ],
   classes: [
-    {id:'c1',name:'Written Communication',category:'English',termId:'t1',status:'Enrolled',grade:'',credits:3,notes:'Focus on A',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
-    {id:'c2',name:'Humanities Elective',category:'Humanities',termId:'t1',status:'Enrolled',grade:'',credits:3,notes:'',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
-    {id:'c3',name:'Anatomy & Physiology I',category:'A&P',termId:'t2',status:'Enrolled',grade:'',credits:3,notes:'HIGH PRIORITY — Lecture',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
-    {id:'c4',name:'A&P I Lab',category:'A&P',termId:'t2',status:'Enrolled',grade:'',credits:1,notes:'Lab section for A&P I',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
-    {id:'c5',name:'American Government',category:'Government',termId:'t2',status:'Enrolled',grade:'',credits:3,notes:'',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
-    {id:'c6',name:'Anatomy & Physiology II',category:'A&P',termId:'t3',status:'Not Started',grade:'',credits:3,notes:'Lecture',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
-    {id:'c7',name:'A&P II Lab',category:'A&P',termId:'t3',status:'Not Started',grade:'',credits:1,notes:'Lab section for A&P II',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
-    {id:'c8',name:'Medical Terminology',category:'Elective',termId:'t3',status:'Not Started',grade:'',credits:3,notes:'',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:''},
+    {id:'c1',name:'Written Communication',category:'English',termId:'t1',status:'Enrolled',grade:'',credits:3,notes:'Focus on A',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:'',dayExceptions:[]},
+    {id:'c2',name:'Humanities Elective',category:'Humanities',termId:'t1',status:'Enrolled',grade:'',credits:3,notes:'',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:'',dayExceptions:[]},
+    {id:'c3',name:'Anatomy & Physiology I',category:'A&P',termId:'t2',status:'Enrolled',grade:'',credits:3,notes:'HIGH PRIORITY — Lecture',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:'',dayExceptions:[]},
+    {id:'c4',name:'A&P I Lab',category:'A&P',termId:'t2',status:'Enrolled',grade:'',credits:1,notes:'Lab section for A&P I',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:'',dayExceptions:[]},
+    {id:'c5',name:'American Government',category:'Government',termId:'t2',status:'Enrolled',grade:'',credits:3,notes:'',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:'',dayExceptions:[]},
+    {id:'c6',name:'Anatomy & Physiology II',category:'A&P',termId:'t3',status:'Not Started',grade:'',credits:3,notes:'Lecture',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:'',dayExceptions:[]},
+    {id:'c7',name:'A&P II Lab',category:'A&P',termId:'t3',status:'Not Started',grade:'',credits:1,notes:'Lab section for A&P II',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:'',dayExceptions:[]},
+    {id:'c8',name:'Medical Terminology',category:'Elective',termId:'t3',status:'Not Started',grade:'',credits:3,notes:'',days:[],startTime:'',endTime:'',termStartDate:'',termEndDate:'',room:'',teacherName:'',teacherEmail:'',teacherPhone:'',teacherOffice:'',teacherHours:'',contactNotes:'',dayExceptions:[]},
   ],
   prereqs: [
     {id:'p1',name:'A&P I + Lab',status:'',termId:'t2',notes:'Most important prereq'},
@@ -1225,6 +1235,15 @@ function openModal(html) {
 function closeModalNow() {
   document.getElementById('modal-overlay').style.display = 'none';
 }
+// Escape key closes modal + mobile drawer
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') {
+    const overlay = document.getElementById('modal-overlay');
+    if(overlay && overlay.style.display !== 'none') { closeModalNow(); return; }
+    const drawer = document.getElementById('mobile-drawer');
+    if(drawer && drawer.classList.contains('open')) { closeMobileDrawer(); }
+  }
+});
 
 // ============================================================
 // DASHBOARD
@@ -1449,20 +1468,28 @@ function renderTermCard(t) {
 }
 
 function renderClassChip(c) {
+  const hasSchedule = c.days && c.days.length > 0;
+  const hasContact  = c.teacherName || c.teacherEmail;
   return `<div class="class-chip" draggable="true" id="chip-${c.id}"
-    ondragstart="dragStart(event,'${c.id}')" ondragend="dragEnd(event)">
-    <div class="class-chip-dot dot-${catColor(c.category)}"></div>
-    <div class="class-chip-info">
+    ondragstart="dragStart(event,'${c.id}')" ondragend="dragEnd(event)"
+    ondblclick="editClass('${c.id}')"
+    title="Double-click to edit · drag to move">
+    <div class="class-chip-dot dot-${catColor(c.category)}" style="flex-shrink:0;margin-top:5px"></div>
+    <div class="class-chip-info" style="min-width:0;flex:1">
       <div class="class-chip-name">${c.name}</div>
-      <div class="class-chip-meta">
+      <div class="class-chip-meta" style="margin-top:4px">
         <span class="tag tag-gray" style="font-size:10px">${c.credits}cr</span>
         ${statusTag(c.status)}
         ${c.grade?`<span class="tag tag-green" style="font-size:10px">${c.grade}</span>`:''}
       </div>
+      ${hasSchedule||hasContact?`<div style="margin-top:5px;font-size:11px;color:var(--text3);display:flex;gap:8px;flex-wrap:wrap">
+        ${hasSchedule?`<span>📅 ${c.days.join(', ')}${c.startTime?' · '+c.startTime:''}</span>`:''}
+        ${hasContact?`<span>👤 ${c.teacherName||c.teacherEmail}</span>`:''}
+      </div>`:''}
     </div>
-    <div class="class-chip-actions">
-      <button class="btn btn-icon btn-ghost" onclick="editClass('${c.id}')" title="Edit">✎</button>
-      <button class="btn btn-icon btn-ghost" onclick="deleteClass('${c.id}')" title="Delete" style="color:var(--red)">×</button>
+    <div class="class-chip-actions" style="flex-direction:column;gap:3px">
+      <button class="btn btn-icon btn-ghost" onclick="event.stopPropagation();viewClassDetail('${c.id}')" title="Schedule & Contact" style="font-size:13px;padding:4px 6px">📅</button>
+      <button class="btn btn-icon btn-ghost" onclick="event.stopPropagation();deleteClass('${c.id}')" title="Delete" style="color:var(--red);font-size:13px;padding:4px 6px">×</button>
     </div>
   </div>`;
 }
@@ -2173,21 +2200,31 @@ function renderWeekView(el) {
     ${days.map(d => {
       const dayName = DAYS[d.getDay()];
       const isToday = d.toDateString() === today.toDateString();
+      const dStr = dateToStr(d);
       const dayClasses = scheduled.filter(c => {
         if(!c.days || !c.days.includes(dayName)) return false;
         if(c.termStartDate && d < new Date(c.termStartDate+'T00:00:00')) return false;
         if(c.termEndDate && d > new Date(c.termEndDate+'T23:59:59')) return false;
         return true;
       });
-      return `<div class="cal-week-day ${isToday?'today-col':''}">
+      return `<div class="cal-week-day ${isToday?'today-col':''}" onclick="calDayClick('${dStr}')" style="cursor:${dayClasses.length?'pointer':'default'}">
         <div class="cal-week-day-header">${dayName}</div>
         <div class="cal-week-day-date" style="${isToday?'color:var(--accent);font-weight:700':''}">${d.getDate()}</div>
-        ${dayClasses.map(c=>`
-          <div class="cal-event dot-${c.category?c.category.toLowerCase().replace(/[^a-z]/g,''):'other'}" 
-            style="background:rgba(79,142,247,0.12);color:var(--accent);margin-bottom:4px;cursor:pointer"
-            onclick="viewClassDetail('${c.id}')" title="${c.name}">
-            ${c.startTime?'<span style=\"font-size:9px;opacity:0.8\">'+c.startTime+'</span> ':''}<span>${c.name}</span>
-          </div>`).join('')}
+        ${dayClasses.map(c=>{
+          const exc = getExceptionForDate(c, dStr);
+          const cancelled = exc?.cancelled;
+          const dispStart = exc?.startTime || c.startTime;
+          const dispRoom  = exc?.room || c.room;
+          return `<div class="cal-event"
+            style="background:${cancelled?'var(--red-dim)':exc?'var(--amber-dim)':'rgba(79,142,247,0.12)'};color:${cancelled?'var(--red)':exc?'var(--amber)':'var(--accent)'};margin-bottom:4px;cursor:pointer;${cancelled?'text-decoration:line-through;opacity:0.7':''}"
+            onclick="event.stopPropagation();openDayExceptions('${c.id}','${dStr}')"
+            title="${exc?'Exception set — click to edit':'Click to add day exception'}">
+            ${dispStart?`<span style="font-size:9px;opacity:0.8">${dispStart} </span>`:''}
+            <span>${c.name}</span>
+            ${exc&&!cancelled?'<span class="exception-badge"></span>':''}
+            ${cancelled?'<span style="font-size:9px"> ⛔</span>':''}
+          </div>`;
+        }).join('')}
         ${!dayClasses.length?'<div style="font-size:10px;color:var(--text3);text-align:center;margin-top:8px">—</div>':''}
       </div>`;
     }).join('')}
@@ -2240,21 +2277,59 @@ function renderMonthView(el) {
     const date = new Date(year,month,d);
     const dayName = DAYS[date.getDay()];
     const isToday = date.toDateString()===today.toDateString();
+    const dateStr = dateToStr(date);
     const dayClasses = scheduled.filter(c=>{
       if(!c.days||!c.days.includes(dayName)) return false;
-      // Check if this date falls within class term dates
       if(c.termStartDate && date < new Date(c.termStartDate+'T00:00:00')) return false;
       if(c.termEndDate && date > new Date(c.termEndDate+'T23:59:59')) return false;
       return true;
     });
-    cells += `<div class="cal-day${isToday?' today':''}">
+    cells += `<div class="cal-day cal-day-clickable${isToday?' today':''}" onclick="calDayClick('${dateStr}')">
       <div class="cal-date">${d}</div>
-      ${dayClasses.slice(0,2).map(c=>`<div class="cal-event" style="background:rgba(79,142,247,0.15);color:var(--accent)" onclick="viewClassDetail('${c.id}')">${c.name}</div>`).join('')}
+      ${dayClasses.slice(0,2).map(c=>{
+        const exc = getExceptionForDate(c, dateStr);
+        const cancelled = exc?.cancelled;
+        const modified = exc && !cancelled;
+        return `<div class="cal-event" style="background:${cancelled?'var(--red-dim)':modified?'var(--amber-dim)':'rgba(79,142,247,0.15)'};color:${cancelled?'var(--red)':modified?'var(--amber)':'var(--accent)'};${cancelled?'text-decoration:line-through':''}" onclick="event.stopPropagation();openDayExceptions('${c.id}','${dateStr}')" title="${exc?'Has exception — click to edit':'Click to add exception'}">${c.name}${modified?'<span class="exception-badge"></span>':''}</div>`;
+      }).join('')}
       ${dayClasses.length>2?`<div style="font-size:9px;color:var(--text3)">+${dayClasses.length-2} more</div>`:''}
     </div>`;
   }
 
   el.innerHTML = navHtml + `<div class="cal-grid">${cells}</div>`;
+}
+
+function calDayClick(dateStr) {
+  const date = new Date(dateStr+'T12:00:00');
+  const dayName = DAYS[date.getDay()];
+  const scheduled = getClassesWithSchedule();
+  const dayClasses = scheduled.filter(c=>{
+    if(!c.days||!c.days.includes(dayName)) return false;
+    if(c.termStartDate && date < new Date(c.termStartDate+'T00:00:00')) return false;
+    if(c.termEndDate && date > new Date(c.termEndDate+'T23:59:59')) return false;
+    return true;
+  });
+  if(!dayClasses.length) return; // no classes this day, do nothing
+  if(dayClasses.length === 1) { openDayExceptions(dayClasses[0].id, dateStr); return; }
+  // Multiple classes — show picker
+  const dateLabel = date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  openModal(`<div class="modal-title">📅 ${dateLabel}</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:16px">Select a class to add/edit an exception:</div>
+    ${dayClasses.map(c=>{
+      const exc = getExceptionForDate(c,dateStr);
+      return `<div class="m-class-card" style="cursor:pointer;margin-bottom:8px" onclick="openDayExceptions('${c.id}','${dateStr}')">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="class-chip-dot dot-${catColor(c.category)}"></div>
+          <div style="flex:1">
+            <div style="font-weight:600;font-size:14px">${c.name}</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px">${c.startTime||'No time set'}${c.endTime?' – '+c.endTime:''}</div>
+            ${exc?`<div style="font-size:11px;margin-top:4px;color:${exc.cancelled?'var(--red)':'var(--amber)'}">${exc.cancelled?'⛔ Cancelled':exc.note?'⚠ '+exc.note:'⚠ Modified'}</div>`:''}
+          </div>
+          <span style="color:var(--text3);font-size:18px">›</span>
+        </div>
+      </div>`;
+    }).join('')}
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModalNow()">Close</button></div>`);
 }
 
 function calPrev() {
@@ -2335,6 +2410,22 @@ function viewClassDetail(id) {
       </div>
     </div>
 
+    ${(c.dayExceptions&&c.dayExceptions.length)?`
+    <div class="detail-section">
+      <div class="detail-section-title">⚠ Day Exceptions (${c.dayExceptions.length})</div>
+      ${c.dayExceptions.sort((a,b)=>a.date.localeCompare(b.date)).map(exc=>`
+        <div class="exc-row ${exc.cancelled?'cancelled':''}">
+          <div class="exc-date-label">${new Date(exc.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+          <div style="flex:1;font-size:12px">
+            ${exc.cancelled?'<span style="color:var(--red);font-weight:600">⛔ Cancelled</span>':''}
+            ${!exc.cancelled&&exc.startTime?`<span style="color:var(--text2)">${exc.startTime}${exc.endTime?' – '+exc.endTime:''}</span>`:''}
+            ${exc.room&&exc.room!==c.room?`<span style="color:var(--text3)"> · ${exc.room}</span>`:''}
+            ${exc.note?`<div class="exc-note">${exc.note}</div>`:''}
+          </div>
+          <button class="btn btn-icon btn-ghost" onclick="clearDayException('${id}','${exc.date}')" style="color:var(--red);font-size:13px;flex-shrink:0">×</button>
+        </div>`).join('')}
+    </div>`:''} 
+
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>
       <button class="btn btn-primary" onclick="saveClassDetail('${id}')">Save</button>
@@ -2371,7 +2462,99 @@ function saveClassDetail(id) {
   c.teacherOffice = document.getElementById('cd-office').value;
   c.teacherHours = document.getElementById('cd-hours').value;
   c.contactNotes = document.getElementById('cd-cnotes').value;
+  if(!c.dayExceptions) c.dayExceptions = [];
   saveState(); closeModalNow(); renderCalendar(); toast('Class details saved');
+}
+
+// ============================================================
+// CALENDAR DAY EXCEPTIONS
+// ============================================================
+function getExceptionForDate(c, dateStr) {
+  if(!c.dayExceptions) return null;
+  return c.dayExceptions.find(e => e.date === dateStr) || null;
+}
+
+function dateToStr(d) {
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function openDayExceptions(classId, dateStr) {
+  const c = S.classes.find(x=>x.id===classId);
+  if(!c) return;
+  if(!c.dayExceptions) c.dayExceptions = [];
+  const exc = c.dayExceptions.find(e=>e.date===dateStr);
+  const dateLabel = new Date(dateStr+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  openModal(`<div class="modal-title">📅 ${c.name}</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:16px">${dateLabel}</div>
+    <div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;font-family:var(--mono);margin-bottom:10px">
+      Regular schedule: ${c.startTime||'—'} – ${c.endTime||'—'} · ${c.days?.join(', ')||'no days set'}
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Exception for this day</div>
+      <div class="form-group" style="margin-bottom:10px">
+        <label>
+          <input type="checkbox" id="exc-cancelled" ${exc?.cancelled?'checked':''} style="width:auto;min-height:auto;margin-right:6px">
+          Class cancelled this day
+        </label>
+      </div>
+      <div id="exc-time-fields" style="${exc?.cancelled?'opacity:0.4;pointer-events:none':''}">
+        <div class="form-row">
+          <div class="form-group flex1"><label>New Start Time</label>
+            <input type="time" id="exc-start" value="${exc?.startTime||c.startTime||''}">
+          </div>
+          <div class="form-group flex1"><label>New End Time</label>
+            <input type="time" id="exc-end" value="${exc?.endTime||c.endTime||''}">
+          </div>
+        </div>
+        <div class="form-group"><label>New Room (optional)</label>
+          <input type="text" id="exc-room" value="${exc?.room||c.room||''}" placeholder="e.g. Zoom, Room 105">
+        </div>
+      </div>
+      <div class="form-group"><label>Note (visible on calendar)</label>
+        <input type="text" id="exc-note" value="${exc?.note||''}" placeholder="e.g. Starting 1hr late, bring laptop">
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      ${exc?`<button class="btn btn-ghost btn-sm" onclick="clearDayException('${classId}','${dateStr}')" style="margin-right:auto">Remove exception</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDayException('${classId}','${dateStr}')">Save Exception</button>
+    </div>`);
+
+  // Toggle time fields when cancelled is checked
+  document.getElementById('exc-cancelled').addEventListener('change', function() {
+    const fields = document.getElementById('exc-time-fields');
+    fields.style.opacity = this.checked ? '0.4' : '1';
+    fields.style.pointerEvents = this.checked ? 'none' : 'auto';
+  });
+}
+
+function saveDayException(classId, dateStr) {
+  const c = S.classes.find(x=>x.id===classId);
+  if(!c) return;
+  if(!c.dayExceptions) c.dayExceptions = [];
+  const cancelled = document.getElementById('exc-cancelled').checked;
+  const startTime = document.getElementById('exc-start').value;
+  const endTime = document.getElementById('exc-end').value;
+  const room = document.getElementById('exc-room').value;
+  const note = document.getElementById('exc-note').value;
+  // Remove existing exception for this date if any
+  c.dayExceptions = c.dayExceptions.filter(e=>e.date!==dateStr);
+  // Only add if something is actually different
+  if(cancelled || note || startTime !== c.startTime || endTime !== c.endTime || room !== c.room) {
+    c.dayExceptions.push({date:dateStr, cancelled, startTime, endTime, room, note});
+  }
+  saveState(); closeModalNow(); renderCalendar();
+  toast(cancelled ? 'Class marked cancelled' : 'Exception saved');
+}
+
+function clearDayException(classId, dateStr) {
+  const c = S.classes.find(x=>x.id===classId);
+  if(!c || !c.dayExceptions) return;
+  c.dayExceptions = c.dayExceptions.filter(e=>e.date!==dateStr);
+  saveState(); closeModalNow(); renderCalendar(); toast('Exception removed');
 }
 
 
