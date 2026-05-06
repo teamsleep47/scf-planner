@@ -174,7 +174,7 @@ textarea{resize:vertical;min-height:60px}
 .editing input,.editing select{background:var(--surface3);border:1px solid var(--accent);color:var(--text);padding:3px 6px;border-radius:4px;font-size:13px;font-family:var(--sans);width:100%}
 
 /* Checklist */
-.checklist-item{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:var(--r);background:var(--surface2);margin-bottom:8px;border:1.5px solid var(--border);transition:all 0.15s}
+.checklist-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--r);background:var(--surface2);margin-bottom:6px;border:1.5px solid var(--border);transition:all 0.15s;cursor:grab}
 .checklist-item.done{opacity:0.5}
 .checklist-item.done .ci-name{text-decoration:line-through;color:var(--text3)}
 .ci-check{width:20px;height:20px;border:2px solid var(--border2);border-radius:5px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all 0.15s}
@@ -278,20 +278,39 @@ textarea{resize:vertical;min-height:60px}
 
 /* Checklist header items */
 .cl-header-item{
-  display:flex;align-items:center;gap:10px;padding:10px 14px;
-  margin-bottom:4px;margin-top:16px;border-radius:var(--r);
-  background:var(--surface2);border:1.5px solid var(--border);
-  cursor:grab;user-select:none;
+  display:flex;align-items:center;gap:10px;padding:8px 14px;
+  margin-bottom:4px;margin-top:20px;border-radius:var(--r);
+  background:transparent;border:1px solid transparent;
+  cursor:grab;transition:background 0.12s;
 }
 .cl-header-item:first-child{margin-top:0}
+.cl-header-item:hover{background:var(--surface2);border-color:var(--border)}
 .cl-header-text{
   font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;
-  color:var(--text3);font-family:var(--mono);flex:1;
+  color:var(--text3);font-family:var(--mono);flex:1;outline:none;
+  border-bottom:1px dashed transparent;transition:border-color 0.15s,color 0.15s;
+  min-width:40px;
 }
-.cl-header-item.drag-over-top{border-top:2px solid var(--accent)}
-.cl-header-item.drag-over-bottom{border-bottom:2px solid var(--accent)}
+.cl-header-text:hover{border-bottom-color:var(--border2)}
+.cl-header-text:focus{border-bottom-color:var(--accent);color:var(--text2)}
+.cl-header-item.drag-over-top{border-top:2px solid var(--accent) !important}
+.cl-header-item.drag-over-bottom{border-bottom:2px solid var(--accent) !important}
 .checklist-item.drag-over-top{border-top:2px solid var(--accent)}
 .checklist-item.drag-over-bottom{border-bottom:2px solid var(--accent)}
+
+/* Inline-editable checklist item name */
+.ci-name[contenteditable]{
+  outline:none;border-bottom:1px dashed transparent;
+  transition:border-color 0.15s;cursor:text;
+  border-radius:3px;padding:1px 3px;margin-left:-3px;
+}
+.ci-name[contenteditable]:hover{border-bottom-color:var(--border2)}
+.ci-name[contenteditable]:focus{border-bottom-color:var(--accent);background:rgba(79,142,247,0.05)}
+
+/* Show delete button on row hover */
+.cl-del-btn{transition:opacity 0.15s !important}
+.cl-header-item:hover .cl-del-btn,
+.checklist-item:hover .cl-del-btn{opacity:1 !important}
 
 /* Drag-sort rows */
 .sortable-row{transition:background 0.15s}
@@ -753,16 +772,9 @@ body.edit-mode [data-editable]:focus{
   <div class="page-title" id="page-title">Dashboard</div>
   <div class="topbar-actions">
     <input type="text" class="search-input" placeholder="Search classes, prereqs…" id="global-search" oninput="handleSearch(this.value)">
-    <button class="btn btn-ghost btn-sm edit-toggle-btn" onclick="toggleEditMode()" id="edit-btn" title="Edit mode">✎ Edit</button>
     <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">☀</button>
     <button class="btn btn-primary btn-sm" onclick="quickAdd()">+ Add Class</button>
   </div>
-</div>
-
-<!-- EDIT MODE BAR -->
-<div class="edit-mode-bar" id="edit-mode-bar">
-  ✎ Edit Mode — click any text to edit it directly
-  <button class="btn btn-sm" style="margin-left:auto;background:var(--amber);color:#fff;border:none" onclick="toggleEditMode()">Done Editing</button>
 </div>
 
 <!-- PANELS -->
@@ -1985,50 +1997,67 @@ function renderChecklist() {
   if(titleEl) titleEl.textContent = S.checklistTitle || 'Post-Acceptance Checklist';
 
   // Progress — only count items (not headers)
-  const items = S.checklist.filter(c=>c.type==='item'||(c.type===undefined&&c.name));
-  const done = items.filter(c=>c.done).length;
+  const items = S.checklist.filter(c => c.type !== 'header');
+  const done = items.filter(c => c.done).length;
   const total = items.length;
-  const pct = total ? Math.round(done/total*100) : 0;
+  const pct = total ? Math.round(done / total * 100) : 0;
   const sub = document.getElementById('checklist-progress-sub');
-  if(sub) sub.textContent = `${done} of ${total} items complete (${pct}%)`;
+  if(sub) sub.textContent = `${done} of ${total} complete (${pct}%)`;
   const bar = document.getElementById('checklist-bar');
-  if(bar) bar.style.width = pct+'%';
+  if(bar) bar.style.width = pct + '%';
 
   const el = document.getElementById('checklist-cats');
-  if(!S.checklist.length){
-    el.innerHTML=`<div class="empty"><div class="empty-icon">☐</div>No items yet.<br>Add a category header or checklist item above.</div>`;
+  if(!S.checklist.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">☐</div>No items yet.<br>Use "+ Category" to add a section header, or "+ Item" to add a checkbox.</div>`;
     return;
   }
 
-  el.innerHTML = S.checklist.map((item,idx) => {
+  el.innerHTML = S.checklist.map(item => {
     const isHeader = item.type === 'header';
+
     if(isHeader) {
       return `<div class="cl-header-item" data-id="${item.id}" draggable="true"
         ondragstart="clDragStart(event,'${item.id}')" ondragend="clDragEnd(event)"
         ondragover="clDragOver(event,'${item.id}')" ondrop="clDrop(event,'${item.id}')">
-        <span class="drag-handle" style="color:var(--text3);font-size:15px">⠿</span>
-        <div class="cl-header-text" ondblclick="editChecklistItem('${item.id}')" title="Double-click to rename">${item.name}</div>
-        <div class="ci-actions" style="opacity:0.5">
-          <button class="btn btn-icon btn-ghost btn-sm" onclick="editChecklistItem('${item.id}')">✎</button>
-          <button class="btn btn-icon btn-ghost btn-sm" onclick="deleteChecklistItem('${item.id}')" style="color:var(--red)">×</button>
-        </div>
+        <span class="drag-handle">⠿</span>
+        <div class="cl-header-text"
+          contenteditable="true"
+          spellcheck="false"
+          onblur="saveChecklistInline('${item.id}',this)"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+          title="Click to edit">${item.name}</div>
+        <button class="btn btn-icon btn-ghost btn-sm cl-del-btn" onclick="deleteChecklistItem('${item.id}')" title="Delete" style="color:var(--red);opacity:0">×</button>
       </div>`;
     }
-    return `<div class="checklist-item ${item.done?'done':''}" id="cli-${item.id}" data-id="${item.id}"
-      draggable="true"
+
+    return `<div class="checklist-item ${item.done ? 'done' : ''}" data-id="${item.id}" draggable="true"
       ondragstart="clDragStart(event,'${item.id}')" ondragend="clDragEnd(event)"
       ondragover="clDragOver(event,'${item.id}')" ondrop="clDrop(event,'${item.id}')">
-      <span class="drag-handle" style="color:var(--text3);font-size:15px;margin-right:-4px">⠿</span>
-      <div class="ci-check ${item.done?'checked':''}" onclick="toggleChecklist('${item.id}')"></div>
-      <div class="ci-body">
-        <div class="ci-name">${item.name}</div>
+      <span class="drag-handle">⠿</span>
+      <div class="ci-check ${item.done ? 'checked' : ''}" onclick="toggleChecklist('${item.id}')"></div>
+      <div class="ci-body" style="flex:1">
+        <div class="ci-name"
+          contenteditable="true"
+          spellcheck="false"
+          onblur="saveChecklistInline('${item.id}',this)"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+          title="Click to edit">${item.name}</div>
       </div>
-      <div class="ci-actions">
-        <button class="btn btn-icon btn-ghost btn-sm" onclick="editChecklistItem('${item.id}')">✎</button>
-        <button class="btn btn-icon btn-ghost btn-sm" onclick="deleteChecklistItem('${item.id}')" style="color:var(--red)">×</button>
-      </div>
+      <button class="btn btn-icon btn-ghost btn-sm cl-del-btn" onclick="deleteChecklistItem('${item.id}')" title="Delete" style="color:var(--red);opacity:0">×</button>
     </div>`;
   }).join('');
+}
+
+function saveChecklistInline(id, el) {
+  const item = S.checklist.find(c => c.id === id);
+  if(!item) return;
+  const val = el.textContent.trim();
+  if(val && val !== item.name) {
+    item.name = val;
+    saveState();
+  } else {
+    el.textContent = item.name; // restore if empty
+  }
 }
 
 // Checklist drag-sort
@@ -2127,24 +2156,9 @@ function saveNewChecklistItem() {
   saveState(); closeModalNow(); renderChecklist(); toast('Item added');
 }
 function editChecklistItem(id) {
-  const item = S.checklist.find(c=>c.id===id);
-  if(!item) return;
-  const isHeader = item.type==='header';
-  openModal(`<div class="modal-title">Edit ${isHeader?'Category Header':'Item'}</div>
-    <div class="form-group">
-      <label>${isHeader?'Category Name':'Item Name'}</label>
-      <input type="text" id="ei-name" value="${item.name}" autofocus>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveEditChecklist('${id}')">Save</button>
-    </div>`);
-}
-function saveEditChecklist(id) {
-  const item = S.checklist.find(c=>c.id===id);
-  if(!item) return;
-  item.name = document.getElementById('ei-name').value.trim() || item.name;
-  saveState(); closeModalNow(); renderChecklist(); toast('Updated');
+  // Focus the inline contenteditable for this item
+  const el = document.querySelector(`[data-id="${id}"] [contenteditable]`);
+  if(el) { el.focus(); const r = document.createRange(); r.selectNodeContents(el); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
 }
 function deleteChecklistItem(id) {
   if(!confirm('Delete this item?')) return;
