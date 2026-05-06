@@ -955,13 +955,12 @@ body.edit-mode [data-editable]:focus{
 <div id="toast" class="toast" style="display:none"></div>
 
 <!-- SIGN IN OVERLAY -->
-<div id="signin-overlay" class="signin-overlay">
+<div id="signin-overlay" class="signin-overlay" style="display:none">
   <div class="signin-card">
     <div style="font-size:32px;margin-bottom:12px">&#9672;</div>
     <div class="signin-title">SCF Academic Planner</div>
     <div class="signin-sub">Sign in with Google to sync your data across all your devices. Your data is saved privately to your own Google Drive.</div>
     <div id="google-btn" style="display:flex;justify-content:center;margin-bottom:16px"></div>
-    <span class="signin-skip" onclick="skipSignin()">Continue without syncing (local only)</span>
   </div>
 </div>
 
@@ -1041,6 +1040,29 @@ function setSyncStatus(status, msg) {
 
 function initGoogleSignin() {
   if(typeof google === 'undefined') { setTimeout(initGoogleSignin, 500); return; }
+
+  // If we have a saved user, try silent token refresh first — skip the sign-in screen
+  const savedUser = localStorage.getItem('scf_guser');
+  if(savedUser) {
+    try { gUser = JSON.parse(savedUser); } catch {}
+    // Try silent token acquisition — no prompt, no overlay
+    trySilentAuth().then(ok => {
+      if(!ok) {
+        // Silent failed — show overlay so user can explicitly sign in
+        showSigninOverlay();
+      }
+    });
+    return;
+  }
+
+  // First-time visitor — show sign-in overlay
+  showSigninOverlay();
+}
+
+function showSigninOverlay() {
+  const overlay = document.getElementById('signin-overlay');
+  if(overlay) overlay.style.display = 'flex';
+  if(typeof google === 'undefined') return;
   google.accounts.id.initialize({
     client_id: CLIENT_ID,
     callback: handleCredential,
@@ -1051,6 +1073,34 @@ function initGoogleSignin() {
     theme: 'filled_black', size: 'large', text: 'signin_with', shape: 'pill', width: 240
   });
   google.accounts.id.prompt();
+}
+
+async function trySilentAuth() {
+  return new Promise((resolve) => {
+    if(typeof google === 'undefined') { resolve(false); return; }
+    try {
+      const tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        prompt: '',
+        callback: async (resp) => {
+          if(resp.access_token) {
+            gDriveToken = resp.access_token;
+            localStorage.setItem('scf_token_expiry', Date.now() + 3500000);
+            // Hide overlay (it was never shown but just in case)
+            const overlay = document.getElementById('signin-overlay');
+            if(overlay) overlay.style.display = 'none';
+            renderSyncBar();
+            await loadFromDrive();
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        }
+      });
+      tokenClient.requestAccessToken({ prompt: '' });
+    } catch(e) { resolve(false); }
+  });
 }
 
 async function handleCredential(response) {
@@ -1070,7 +1120,8 @@ async function getAccessToken() {
         if(resp.access_token) {
           gDriveToken = resp.access_token;
           localStorage.setItem('scf_token_expiry', Date.now() + 3500000);
-          document.getElementById('signin-overlay').style.display = 'none';
+          const overlay = document.getElementById('signin-overlay');
+          if(overlay) overlay.style.display = 'none';
           renderSyncBar();
           await loadFromDrive();
           resolve(resp.access_token);
@@ -1098,14 +1149,7 @@ function signOut() {
   location.reload();
 }
 
-function skipSignin() {
-  const overlay = document.getElementById('signin-overlay');
-  if(overlay) overlay.style.display = 'none';
-  const bar = document.getElementById('sync-bar');
-  if(bar) bar.innerHTML = '<div class="sync-dot" id="sync-dot"></div><span id="sync-label">Local only — not synced</span>';
-  const mStatus = document.getElementById('mobile-sync-status');
-  if(mStatus) mStatus.textContent = 'Local only (not synced)';
-}
+function skipSignin() { /* disabled — sign-in required */ }
 
 async function findDriveFile() {
   const res = await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name%3D%22' + FILE_NAME + '"', {
@@ -2922,8 +2966,6 @@ renderDashboard();
 
 // Init Google Sign-In
 window.addEventListener('load', () => {
-  const savedUser = localStorage.getItem('scf_guser');
-  if(savedUser) { try { gUser = JSON.parse(savedUser); } catch {} }
   initGoogleSignin();
 });
 </script>
