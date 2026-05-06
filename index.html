@@ -343,15 +343,46 @@ textarea{resize:vertical;min-height:60px}
   .topbar{display:none}
   .sync-bar{font-size:11px;padding:5px 12px}
 
-  /* Modal full-screen on mobile */
-  .modal-overlay{padding:0;align-items:flex-end}
-  .modal{max-width:100%;border-radius:var(--r-lg) var(--r-lg) 0 0;max-height:90vh}
+  /* Modal bottom sheet on mobile */
+  .modal-overlay{padding:0;align-items:flex-end;background:rgba(0,0,0,0.65)}
+  .modal{max-width:100%;width:100%;border-radius:16px 16px 0 0;max-height:88vh;padding:20px 18px 32px}
+  .modal-title{font-size:17px}
 
   /* Calendar week view scroll */
   .cal-week-strip{grid-template-columns:repeat(7,minmax(100px,1fr));overflow-x:auto}
 
   /* Edit mode indicator mobile */
   .edit-mode-bar{font-size:12px;padding:8px 14px}
+
+  /* Always show chip actions on mobile */
+  .class-chip-actions{opacity:1 !important}
+  .class-chip-actions .btn-icon{padding:6px 10px;font-size:15px}
+
+  /* Bigger tap targets */
+  .btn{min-height:40px}
+  .btn-sm{min-height:36px}
+  .ci-check{width:24px;height:24px}
+  .filter-chip{padding:6px 14px;font-size:13px}
+  .nav-item{padding:12px 20px;font-size:15px}
+  .day-pill{padding:6px 12px;font-size:12px}
+
+  /* Prereq selects bigger on mobile */
+  .data-table select{min-height:36px;font-size:14px}
+  .data-table td{padding:10px 8px}
+
+  /* Bottom nav safe area */
+  .panel{padding-bottom:90px}
+
+  /* GPA grid stack */
+  #gpa-grid{grid-template-columns:1fr}
+
+  /* Topbar search hidden on mobile */
+  .topbar .search-input{display:none}
+
+  /* Cal grid smaller on mobile */
+  .cal-grid{gap:1px}
+  .cal-day{min-height:52px;padding:3px}
+  .cal-event{font-size:9px;padding:1px 3px}
 
   /* Classes table scroll */
   .card{overflow-x:auto}
@@ -525,6 +556,7 @@ body.edit-mode [data-editable]:focus{
 <div class="mobile-topbar">
   <div class="mobile-topbar-title" id="mobile-page-title">Dashboard</div>
   <div class="mobile-topbar-actions">
+    <button class="mobile-menu-btn" onclick="quickAdd()" style="font-size:18px;font-weight:600">+</button>
     <button class="mobile-menu-btn" onclick="toggleTheme()" id="mobile-theme-btn">☀</button>
     <button class="mobile-menu-btn" onclick="openMobileDrawer()">☰</button>
   </div>
@@ -532,7 +564,7 @@ body.edit-mode [data-editable]:focus{
 
 <!-- MOBILE DRAWER -->
 <div class="mobile-drawer" id="mobile-drawer">
-  <div class="mobile-drawer-backdrop" onclick="closeMobileDrawer()"></div>
+  <div class="mobile-drawer-backdrop" onclick="closeMobileDrawer()" ontouchend="closeMobileDrawer()"></div>
   <div class="mobile-drawer-panel">
     <div class="sidebar-logo">
       <div class="logo-title">SCF Planner</div>
@@ -549,6 +581,7 @@ body.edit-mode [data-editable]:focus{
     <button class="nav-item" onclick="mobileNav('gpa')"><span class="nav-icon">∑</span><span>GPA Calc</span></button>
     <button class="nav-item" onclick="mobileNav('calendar')"><span class="nav-icon">◫</span><span>Calendar</span></button>
     <div style="padding:16px;margin-top:auto;border-top:1px solid var(--border)">
+      <button class="btn btn-primary btn-sm" onclick="quickAdd();closeMobileDrawer()" style="width:100%;justify-content:center;margin-bottom:8px">+ Add Class</button>
       <button class="btn btn-ghost btn-sm" onclick="showExport();closeMobileDrawer()" style="width:100%;justify-content:center">⬆ Export</button>
       <div style="margin-top:10px;font-size:12px;color:var(--text3)" id="mobile-sync-status"></div>
     </div>
@@ -688,7 +721,7 @@ body.edit-mode [data-editable]:focus{
     <div><div class="section-title">GPA Calculator</div></div>
     <button class="btn btn-ghost btn-sm" onclick="clearGpa()">Clear All</button>
   </div>
-  <div class="grid2">
+  <div class="grid2" id="gpa-grid">
     <div class="card" style="text-align:center;padding:28px">
       <div class="stat-label">Cumulative GPA</div>
       <div class="gpa-big" id="gpa-big">—</div>
@@ -749,7 +782,7 @@ body.edit-mode [data-editable]:focus{
 </div><!-- /app -->
 
 <!-- MODALS -->
-<div id="modal-overlay" class="modal-overlay" style="display:none" onclick="closeModal(event)">
+<div id="modal-overlay" class="modal-overlay" style="display:none" onclick="closeModal(event)" ontouchend="closeModal(event)">
   <div class="modal" id="modal-content"></div>
 </div>
 
@@ -880,6 +913,9 @@ function renderSyncBar() {
   bar.innerHTML = '<div class="sync-dot synced" id="sync-dot"></div><span id="sync-label">Synced to Drive</span>' +
     '<div class="sync-user"><img class="sync-avatar" src="' + gUser.picture + '" referrerpolicy="no-referrer"><span>' + gUser.name + '</span>' +
     '<button class="btn btn-ghost btn-sm" onclick="signOut()" style="padding:3px 8px;font-size:11px">Sign out</button></div>';
+  // Update mobile sync status
+  const mStatus = document.getElementById('mobile-sync-status');
+  if(mStatus) mStatus.innerHTML = '<span style="color:var(--green)">● Synced</span> · ' + (gUser.name||gUser.email||'');
 }
 
 function signOut() {
@@ -889,9 +925,12 @@ function signOut() {
 }
 
 function skipSignin() {
-  document.getElementById('signin-overlay').style.display = 'none';
+  const overlay = document.getElementById('signin-overlay');
+  if(overlay) overlay.style.display = 'none';
   const bar = document.getElementById('sync-bar');
   if(bar) bar.innerHTML = '<div class="sync-dot" id="sync-dot"></div><span id="sync-label">Local only — not synced</span>';
+  const mStatus = document.getElementById('mobile-sync-status');
+  if(mStatus) mStatus.textContent = 'Local only (not synced)';
 }
 
 async function findDriveFile() {
@@ -977,14 +1016,21 @@ let activePanel = 'dashboard';
 function showPanel(id) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('panel-' + id).classList.add('active');
+  const panel = document.getElementById('panel-' + id);
+  if(!panel) return;
+  panel.classList.add('active');
   document.getElementById('nav-' + id)?.classList.add('active');
   activePanel = id;
   const titles = {dashboard:'Dashboard',timeline:'Timeline',terms:'Term Planner',classes:'All Classes',prereqs:'Prerequisites',checklist:'Post-Acceptance',gpa:'GPA Calculator',calendar:'Calendar & Schedule'};
-  document.getElementById('page-title').textContent = titles[id] || id;
-  const mt = document.getElementById('mobile-page-title');
   const mTitles = {dashboard:'Dashboard',terms:'Terms',classes:'Classes',prereqs:'Prereqs',checklist:'Post-Accept',gpa:'GPA',calendar:'Calendar'};
+  const titleEl = document.getElementById('page-title');
+  if(titleEl) titleEl.textContent = titles[id] || id;
+  const mt = document.getElementById('mobile-page-title');
   if(mt) mt.textContent = mTitles[id] || titles[id] || id;
+  // Sync bottom nav active state
+  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
+  const bottomMap = {dashboard:'mnav-dashboard',terms:'mnav-terms',classes:'mnav-classes',calendar:'mnav-calendar'};
+  if(bottomMap[id]) document.getElementById(bottomMap[id])?.classList.add('active');
   renderPanel(id);
 }
 
@@ -1000,11 +1046,11 @@ function renderPanel(id) {
 }
 
 function updateNavBadges() {
-  document.getElementById('nb-terms').textContent = S.terms.length;
-  document.getElementById('nb-classes').textContent = S.classes.length;
-  document.getElementById('nb-prereqs').textContent = S.prereqs.filter(p=>p.status==='Finished').length + '/' + S.prereqs.length;
-  const cl = S.checklist;
-  document.getElementById('nb-checklist').textContent = cl.filter(c=>c.done).length + '/' + cl.length;
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  set('nb-terms', S.terms.length);
+  set('nb-classes', S.classes.length);
+  set('nb-prereqs', S.prereqs.filter(p=>p.status==='Finished').length + '/' + S.prereqs.length);
+  set('nb-checklist', S.checklist.filter(c=>c.done).length + '/' + S.checklist.length);
   updateMobileNavBadges();
 }
 
@@ -1273,7 +1319,7 @@ function renderTermCard(t) {
       <div class="drop-zone" id="drop-${t.id}">Drop class here</div>
     </div>
     <div class="term-add">
-      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="quickAddToTerm('${t.id}')">+ Add Class</button>
+      <button class="btn btn-ghost btn-sm" style="width:100%;min-height:40px" onclick="quickAddToTerm('${t.id}')">+ Add Class</button>
     </div>
   </div>`;
 }
@@ -1790,11 +1836,21 @@ function importData() {
 function toggleTheme() {
   const isLight = document.body.classList.toggle('light');
   localStorage.setItem('scf_theme', isLight ? 'light' : 'dark');
-  document.getElementById('theme-btn').textContent = isLight ? '☾' : '☀';
+  const icon = isLight ? '☾' : '☀';
+  const b1 = document.getElementById('theme-btn');
+  const b2 = document.getElementById('mobile-theme-btn');
+  if(b1) b1.textContent = icon;
+  if(b2) b2.textContent = icon;
 }
 function initTheme() {
   const t = localStorage.getItem('scf_theme');
-  if(t === 'light') { document.body.classList.add('light'); document.getElementById('theme-btn').textContent = '☾'; }
+  if(t === 'light') {
+    document.body.classList.add('light');
+    const b1 = document.getElementById('theme-btn');
+    const b2 = document.getElementById('mobile-theme-btn');
+    if(b1) b1.textContent = '☾';
+    if(b2) b2.textContent = '☾';
+  }
 }
 
 // ============================================================
@@ -2080,8 +2136,6 @@ function saveClassDetail(id) {
 // ============================================================
 // MOBILE NAV
 // ============================================================
-function isMobile() { return window.innerWidth <= 768; }
-
 function openMobileDrawer() {
   document.getElementById('mobile-drawer').classList.add('open');
 }
@@ -2091,102 +2145,46 @@ function closeMobileDrawer() {
 function mobileNav(id) {
   closeMobileDrawer();
   showPanel(id);
-  // Update bottom nav active state
-  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
-  const navMap = {dashboard:'dashboard',terms:'terms',classes:'classes',calendar:'calendar'};
-  const bottomId = navMap[id] || null;
-  if(bottomId) document.getElementById('mnav-'+bottomId)?.classList.add('active');
-  // Update mobile page title
-  const titles = {dashboard:'Dashboard',timeline:'Timeline',terms:'Terms',classes:'Classes',prereqs:'Prerequisites',checklist:'Post-Acceptance',gpa:'GPA Calc',calendar:'Calendar'};
-  const mt = document.getElementById('mobile-page-title');
-  if(mt) mt.textContent = titles[id] || id;
 }
-
 function updateMobileNavBadges() {
   const mnbTerms = document.getElementById('mnb-terms');
   const mnbClasses = document.getElementById('mnb-classes');
   if(mnbTerms) mnbTerms.textContent = S.terms.length;
   if(mnbClasses) mnbClasses.textContent = S.classes.length;
   const syncStatus = document.getElementById('mobile-sync-status');
-  if(syncStatus && gUser) syncStatus.textContent = 'Signed in as ' + gUser.name;
-}
-
-// Sync mobile theme btn
-const origToggleTheme = toggleTheme;
-function toggleTheme() {
-  origToggleTheme();
-  const isLight = document.body.classList.contains('light');
-  const mBtn = document.getElementById('mobile-theme-btn');
-  if(mBtn) mBtn.textContent = isLight ? '☾' : '☀';
-}
-
-// Patch initTheme to also set mobile btn
-const origInitTheme = initTheme;
-function initTheme() {
-  const t = localStorage.getItem('scf_theme');
-  if(t === 'light') {
-    document.body.classList.add('light');
-    const btn = document.getElementById('theme-btn');
-    if(btn) btn.textContent = '☾';
-    const mBtn = document.getElementById('mobile-theme-btn');
-    if(mBtn) mBtn.textContent = '☾';
-  }
+  if(syncStatus && gUser) syncStatus.textContent = 'Signed in as ' + (gUser.name||gUser.email||'');
 }
 
 // ============================================================
 // EDIT MODE
 // ============================================================
 let editMode = false;
-
 function toggleEditMode() {
   editMode = !editMode;
   document.body.classList.toggle('edit-mode', editMode);
   const bar = document.getElementById('edit-mode-bar');
   const btn = document.getElementById('edit-btn');
   if(bar) bar.classList.toggle('visible', editMode);
-  if(btn) {
-    btn.classList.toggle('active', editMode);
-    btn.textContent = editMode ? '✎ Editing' : '✎ Edit';
-  }
-
-  // Toggle contenteditable on all marked elements
+  if(btn){ btn.classList.toggle('active', editMode); btn.textContent = editMode ? '✎ Editing' : '✎ Edit'; }
   document.querySelectorAll('[data-editable]').forEach(el => {
     el.contentEditable = editMode ? 'true' : 'false';
-    if(!editMode) {
-      // Save any changes — store in localStorage keyed by data-edit-key or text
-      const key = el.dataset.editKey;
-      if(key) {
-        if(!S.editOverrides) S.editOverrides = {};
-        S.editOverrides[key] = el.textContent.trim();
-        saveState();
-      }
+  });
+  if(editMode) { toast('Click any amber-outlined text to edit it'); }
+  else { toast('Edit mode off — changes saved'); renderPanel(activePanel); }
+}
+
+
+// Swipe to close mobile drawer
+(function(){
+  let startX = 0;
+  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    if(dx < -60 && document.getElementById('mobile-drawer').classList.contains('open')) {
+      closeMobileDrawer();
     }
-  });
-
-  if(editMode) {
-    toast('Click any highlighted text to edit it', 'success');
-  } else {
-    toast('Changes saved');
-    // Re-render to pick up any edits that affect rendered content
-    renderPanel(activePanel);
-  }
-}
-
-// Apply saved edit overrides after render
-function applyEditOverrides() {
-  if(!S.editOverrides) return;
-  Object.entries(S.editOverrides).forEach(([key, val]) => {
-    const el = document.querySelector('[data-edit-key="'+key+'"]');
-    if(el) el.textContent = val;
-  });
-}
-
-// Patch showPanel to apply overrides after each render
-const _origShowPanel = showPanel;
-function showPanel(id) {
-  _origShowPanel(id);
-  setTimeout(applyEditOverrides, 50);
-}
+  }, {passive:true});
+})();
 
 // ============================================================
 // INIT
@@ -2198,9 +2196,7 @@ renderDashboard();
 // Init Google Sign-In
 window.addEventListener('load', () => {
   const savedUser = localStorage.getItem('scf_guser');
-  if(savedUser) {
-    try { gUser = JSON.parse(savedUser); } catch {}
-  }
+  if(savedUser) { try { gUser = JSON.parse(savedUser); } catch {} }
   initGoogleSignin();
 });
 </script>
