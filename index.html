@@ -544,7 +544,7 @@ textarea{resize:vertical;min-height:60px}
   border-radius:5px;border:none;background:none;color:var(--text3);
   cursor:pointer;font-size:13px;opacity:0;transition:opacity 0.15s;flex-shrink:0;
 }
-.quick-links-area:hover .ql-edit-btn{opacity:1}
+.ql-edit-btn{opacity:0.5 !important}
 .ql-edit-btn:hover{background:var(--surface2);color:var(--text2)}
 
 /* Quick links edit modal items */
@@ -858,7 +858,7 @@ body.edit-mode [data-editable]:focus{
   <div class="page-title" id="page-title">Dashboard</div>
   <div class="topbar-actions">
     <input type="text" class="search-input" placeholder="Search classes, prereqs…" id="global-search" oninput="handleSearch(this.value)">
-    <div class="quick-links-area desktop-only" id="quick-links-bar" ondblclick="editQuickLinks()"></div>
+    <div class="quick-links-area desktop-only" id="quick-links-bar"></div>
     <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">☀</button>
     <button class="btn btn-primary btn-sm" onclick="quickAdd()">+ Add Class</button>
   </div>
@@ -3162,7 +3162,7 @@ function renderQuickLinksBar() {
   if(!bar) return;
   if(!S.quickLinks) S.quickLinks = [];
   if(!S.quickLinks.length) {
-    bar.innerHTML = '<span class="ql-edit-btn" onclick="editQuickLinks()" title="Add links">⊕</span>';
+    bar.innerHTML = '<span class="ql-edit-btn" onclick="editQuickLinks()" title="Add links" style="opacity:0.6;font-size:16px">⊕</span>';
     return;
   }
   bar.innerHTML = S.quickLinks.map(l => `
