@@ -1052,12 +1052,31 @@ let gDriveFileId = null;
 let gUser = null;
 let syncTimeout = null;
 
+// ── Token cache helpers ──────────────────────────────────────
+// We store the access token in sessionStorage so it survives
+// page refreshes within the same browser tab session.
+// sessionStorage is cleared when the tab/browser is closed.
+function saveTokenToSession(token) {
+  sessionStorage.setItem('scf_access_token', token);
+  sessionStorage.setItem('scf_token_ts', Date.now().toString());
+}
+function loadTokenFromSession() {
+  const token = sessionStorage.getItem('scf_access_token');
+  const ts = parseInt(sessionStorage.getItem('scf_token_ts') || '0');
+  // Tokens last ~1 hour; treat as valid for 55 min to be safe
+  if(token && (Date.now() - ts) < 55 * 60 * 1000) return token;
+  return null;
+}
+function clearSessionToken() {
+  sessionStorage.removeItem('scf_access_token');
+  sessionStorage.removeItem('scf_token_ts');
+}
+
 function setSyncStatus(status, msg) {
   const dot = document.getElementById('sync-dot');
   const label = document.getElementById('sync-label');
   if(dot) { dot.className = 'sync-dot ' + status; }
   if(label) label.textContent = msg;
-  // Mobile sync dot
   const mdot = document.getElementById('mobile-sync-dot');
   if(mdot) {
     mdot.style.background = status==='synced'?'var(--green)':status==='syncing'?'var(--amber)':status==='error'?'var(--red)':'var(--text3)';
@@ -1067,35 +1086,49 @@ function setSyncStatus(status, msg) {
 function initGoogleSignin() {
   if(typeof google === 'undefined') { setTimeout(initGoogleSignin, 500); return; }
 
-  // If we have a saved user, try silent token refresh first — skip the sign-in screen
   const savedUser = localStorage.getItem('scf_guser');
-  if(savedUser) {
-    try { gUser = JSON.parse(savedUser); } catch {}
-    // Try silent token acquisition — no prompt, no overlay
-    trySilentAuth().then(ok => {
-      if(!ok) {
-        // Silent failed — show overlay so user can explicitly sign in
-        showSigninOverlay();
-      }
-    });
+  if(!savedUser) { showSigninOverlay(); return; }
+  try { gUser = JSON.parse(savedUser); } catch {}
+
+  // 1. Check if we have a fresh cached token from this session
+  const cachedToken = loadTokenFromSession();
+  if(cachedToken) {
+    gDriveToken = cachedToken;
+    unlockApp();
+    renderSyncBar();
+    // Load from Drive in background, no sign-in needed
+    loadFromDrive();
+    // Schedule a silent token refresh before it expires
+    scheduleTokenRefresh();
     return;
   }
 
-  // First-time visitor — show sign-in overlay
-  showSigninOverlay();
+  // 2. No cached token — try silent OAuth (no UI shown)
+  trySilentAuth().then(ok => {
+    if(!ok) showSigninOverlay();
+  });
+}
+
+// Proactively refresh the token 5 min before it expires
+function scheduleTokenRefresh() {
+  const ts = parseInt(sessionStorage.getItem('scf_token_ts') || '0');
+  const age = Date.now() - ts;
+  const refreshIn = Math.max(0, (50 * 60 * 1000) - age); // refresh at 50 min
+  setTimeout(() => {
+    trySilentAuth(); // silently get a new token in the background
+  }, refreshIn);
 }
 
 function showSigninOverlay() {
   const overlay = document.getElementById('signin-overlay');
   if(overlay) overlay.style.display = 'flex';
-  if(typeof google === 'undefined') { return; }
+  if(typeof google === 'undefined') return;
   google.accounts.id.initialize({
     client_id: CLIENT_ID,
     callback: handleCredential,
     auto_select: false,
     cancel_on_tap_outside: false
   });
-  // Render real GSI button and hide static fallback
   const realBtn = document.getElementById('google-btn');
   const staticBtn = document.getElementById('google-btn-static');
   if(realBtn) realBtn.style.display = 'flex';
@@ -1103,16 +1136,10 @@ function showSigninOverlay() {
   google.accounts.id.renderButton(realBtn, {
     theme: 'filled_black', size: 'large', text: 'signin_with', shape: 'pill', width: 240
   });
-  // No prompt() — the card IS the only sign-in method, no floating popup
 }
 
-// Called by the static button before GSI is ready
 function triggerGoogleSignin() {
-  if(typeof google !== 'undefined') {
-    showSigninOverlay();
-  }
-  // If GSI not loaded yet, button click does nothing visible
-  // but GSI will call showSigninOverlay() itself once ready
+  if(typeof google !== 'undefined') showSigninOverlay();
 }
 
 async function trySilentAuth() {
@@ -1126,10 +1153,12 @@ async function trySilentAuth() {
         callback: async (resp) => {
           if(resp.access_token) {
             gDriveToken = resp.access_token;
+            saveTokenToSession(resp.access_token);
             localStorage.setItem('scf_token_expiry', Date.now() + 3500000);
             unlockApp();
             renderSyncBar();
             await loadFromDrive();
+            scheduleTokenRefresh();
             resolve(true);
           } else {
             resolve(false);
@@ -1157,10 +1186,12 @@ async function getAccessToken() {
       callback: async (resp) => {
         if(resp.access_token) {
           gDriveToken = resp.access_token;
+          saveTokenToSession(resp.access_token);
           localStorage.setItem('scf_token_expiry', Date.now() + 3500000);
           unlockApp();
           renderSyncBar();
           await loadFromDrive();
+          scheduleTokenRefresh();
           resolve(resp.access_token);
         } else { resolve(null); }
       }
@@ -1183,6 +1214,7 @@ function renderSyncBar() {
 function signOut() {
   gDriveToken = null; gUser = null; gDriveFileId = null;
   localStorage.removeItem('scf_guser');
+  clearSessionToken();
   location.reload();
 }
 
