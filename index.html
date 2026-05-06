@@ -276,11 +276,89 @@ textarea{resize:vertical;min-height:60px}
 /* Export */
 .export-preview{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px;font-size:11px;font-family:var(--mono);color:var(--text3);max-height:200px;overflow-y:auto;white-space:pre;margin:10px 0}
 
+/* ── MOBILE BOTTOM NAV ── */
+.mobile-nav{display:none}
+.mobile-topbar{display:none}
+.hamburger{display:none}
+
 @media(max-width:768px){
-  .sidebar{width:56px}.sidebar .nav-item span{display:none}.logo-title,.logo-sub{display:none}
-  .panel{padding:14px}.grid2,.grid3,.grid4{grid-template-columns:1fr}.stat-grid{grid-template-columns:repeat(2,1fr)}
-  .terms-container{flex-direction:column}.term-card{width:100%;min-width:unset}
-  .topbar{padding:10px 14px}
+  /* Hide desktop sidebar */
+  .sidebar{display:none}
+
+  /* Full-width main */
+  .app{flex-direction:column}
+  .main{width:100%;height:100vh;overflow-y:auto}
+
+  /* Mobile top bar */
+  .mobile-topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 16px;background:var(--surface);
+    border-bottom:2px solid var(--border2);position:sticky;top:0;z-index:100;flex-shrink:0;
+  }
+  .mobile-topbar-title{font-size:16px;font-weight:700;letter-spacing:-0.01em}
+  .mobile-topbar-actions{display:flex;gap:8px;align-items:center}
+  .mobile-menu-btn{background:none;border:1.5px solid var(--border2);color:var(--text2);
+    border-radius:var(--r);padding:6px 10px;font-size:16px;cursor:pointer;line-height:1}
+
+  /* Slide-out drawer */
+  .mobile-drawer{
+    position:fixed;inset:0;z-index:200;display:flex;pointer-events:none;
+  }
+  .mobile-drawer.open{pointer-events:all}
+  .mobile-drawer-backdrop{
+    position:absolute;inset:0;background:rgba(0,0,0,0.5);
+    opacity:0;transition:opacity 0.25s;
+  }
+  .mobile-drawer.open .mobile-drawer-backdrop{opacity:1}
+  .mobile-drawer-panel{
+    position:absolute;left:0;top:0;bottom:0;width:260px;
+    background:var(--surface);border-right:2px solid var(--border2);
+    display:flex;flex-direction:column;overflow-y:auto;
+    transform:translateX(-100%);transition:transform 0.25s ease;
+  }
+  .mobile-drawer.open .mobile-drawer-panel{transform:translateX(0)}
+
+  /* Bottom nav bar */
+  .mobile-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;z-index:100;
+    background:var(--surface);border-top:2px solid var(--border2);
+    padding:4px 0 max(4px, env(safe-area-inset-bottom));
+  }
+  .mobile-nav-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:6px 2px;cursor:pointer;border:none;background:none;color:var(--text3);
+    font-size:10px;font-family:var(--sans);font-weight:500;transition:color 0.15s;
+  }
+  .mobile-nav-item.active{color:var(--accent)}
+  .mobile-nav-icon{font-size:18px;line-height:1}
+
+  /* Panels */
+  .panel{padding:14px 14px 80px}
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .terms-container{flex-direction:column}
+  .term-card{width:100%;min-width:unset}
+
+  /* Hide desktop topbar on mobile */
+  .topbar{display:none}
+  .sync-bar{font-size:11px;padding:5px 12px}
+
+  /* Modal full-screen on mobile */
+  .modal-overlay{padding:0;align-items:flex-end}
+  .modal{max-width:100%;border-radius:var(--r-lg) var(--r-lg) 0 0;max-height:90vh}
+
+  /* Calendar week view scroll */
+  .cal-week-strip{grid-template-columns:repeat(7,minmax(100px,1fr));overflow-x:auto}
+
+  /* Edit mode indicator mobile */
+  .edit-mode-bar{font-size:12px;padding:8px 14px}
+
+  /* Classes table scroll */
+  .card{overflow-x:auto}
+  .data-table{min-width:600px}
+
+  /* Search hidden on mobile topbar — accessed via drawer */
+  .search-input{width:140px;font-size:13px}
 }
 
 /* Sync bar */
@@ -375,6 +453,26 @@ body.light .sync-bar{background:var(--surface2)}
 .day-pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;font-family:var(--mono);margin-right:4px;margin-bottom:4px;background:var(--accent-dim,rgba(79,142,247,0.12));color:var(--accent)}
 .day-pill.active{background:var(--accent);color:#fff}
 
+
+/* Edit mode */
+.edit-mode-bar{
+  display:none;align-items:center;gap:12px;padding:9px 20px;
+  background:rgba(245,166,35,0.12);border-bottom:2px solid var(--amber);
+  font-size:13px;color:var(--amber);font-weight:500;flex-shrink:0;
+}
+.edit-mode-bar.visible{display:flex}
+body.edit-mode [data-editable]{
+  outline:1.5px dashed rgba(245,166,35,0.5);border-radius:4px;cursor:text;
+  transition:outline 0.15s;
+}
+body.edit-mode [data-editable]:hover{
+  outline:2px solid var(--amber);background:rgba(245,166,35,0.06);
+}
+body.edit-mode [data-editable]:focus{
+  outline:2px solid var(--amber);background:rgba(245,166,35,0.1);
+}
+.edit-toggle-btn.active{background:rgba(245,166,35,0.15);color:var(--amber);border-color:var(--amber)}
+
 </style>
 </head>
 <body>
@@ -383,8 +481,8 @@ body.light .sync-bar{background:var(--surface2)}
 <!-- SIDEBAR -->
 <div class="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-title">SCF Planner</div>
-    <div class="logo-sub">Radiography Track</div>
+    <div class="logo-title" data-editable contenteditable="false">SCF Planner</div>
+    <div class="logo-sub" data-editable contenteditable="false">Radiography Track</div>
   </div>
   <div class="nav-section">Overview</div>
   <button class="nav-item active" onclick="showPanel('dashboard')" id="nav-dashboard">
@@ -423,6 +521,59 @@ body.light .sync-bar{background:var(--surface2)}
 <!-- MAIN -->
 <div class="main">
 
+<!-- MOBILE TOPBAR -->
+<div class="mobile-topbar">
+  <div class="mobile-topbar-title" id="mobile-page-title">Dashboard</div>
+  <div class="mobile-topbar-actions">
+    <button class="mobile-menu-btn" onclick="toggleTheme()" id="mobile-theme-btn">☀</button>
+    <button class="mobile-menu-btn" onclick="openMobileDrawer()">☰</button>
+  </div>
+</div>
+
+<!-- MOBILE DRAWER -->
+<div class="mobile-drawer" id="mobile-drawer">
+  <div class="mobile-drawer-backdrop" onclick="closeMobileDrawer()"></div>
+  <div class="mobile-drawer-panel">
+    <div class="sidebar-logo">
+      <div class="logo-title">SCF Planner</div>
+      <div class="logo-sub">Radiography Track</div>
+    </div>
+    <div class="nav-section">Overview</div>
+    <button class="nav-item" onclick="mobileNav('dashboard')"><span class="nav-icon">◈</span><span>Dashboard</span></button>
+    <div class="nav-section">Planning</div>
+    <button class="nav-item" onclick="mobileNav('terms')"><span class="nav-icon">▦</span><span>Terms</span><span class="nav-badge" id="mnb-terms">0</span></button>
+    <button class="nav-item" onclick="mobileNav('classes')"><span class="nav-icon">◎</span><span>All Classes</span><span class="nav-badge" id="mnb-classes">0</span></button>
+    <div class="nav-section">Tracking</div>
+    <button class="nav-item" onclick="mobileNav('prereqs')"><span class="nav-icon">✓</span><span>Prerequisites</span></button>
+    <button class="nav-item" onclick="mobileNav('checklist')"><span class="nav-icon">☐</span><span>Post-Acceptance</span></button>
+    <button class="nav-item" onclick="mobileNav('gpa')"><span class="nav-icon">∑</span><span>GPA Calc</span></button>
+    <button class="nav-item" onclick="mobileNav('calendar')"><span class="nav-icon">◫</span><span>Calendar</span></button>
+    <div style="padding:16px;margin-top:auto;border-top:1px solid var(--border)">
+      <button class="btn btn-ghost btn-sm" onclick="showExport();closeMobileDrawer()" style="width:100%;justify-content:center">⬆ Export</button>
+      <div style="margin-top:10px;font-size:12px;color:var(--text3)" id="mobile-sync-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<div class="mobile-nav">
+  <button class="mobile-nav-item active" id="mnav-dashboard" onclick="mobileNav('dashboard')">
+    <span class="mobile-nav-icon">◈</span><span>Home</span>
+  </button>
+  <button class="mobile-nav-item" id="mnav-terms" onclick="mobileNav('terms')">
+    <span class="mobile-nav-icon">▦</span><span>Terms</span>
+  </button>
+  <button class="mobile-nav-item" id="mnav-classes" onclick="mobileNav('classes')">
+    <span class="mobile-nav-icon">◎</span><span>Classes</span>
+  </button>
+  <button class="mobile-nav-item" id="mnav-calendar" onclick="mobileNav('calendar')">
+    <span class="mobile-nav-icon">◫</span><span>Calendar</span>
+  </button>
+  <button class="mobile-nav-item" id="mnav-more" onclick="openMobileDrawer()">
+    <span class="mobile-nav-icon">⋯</span><span>More</span>
+  </button>
+</div>
+
 <!-- TOPBAR -->
 <div id="sync-bar" class="sync-bar">
   <div class="sync-dot" id="sync-dot"></div>
@@ -432,9 +583,16 @@ body.light .sync-bar{background:var(--surface2)}
   <div class="page-title" id="page-title">Dashboard</div>
   <div class="topbar-actions">
     <input type="text" class="search-input" placeholder="Search classes, prereqs…" id="global-search" oninput="handleSearch(this.value)">
+    <button class="btn btn-ghost btn-sm edit-toggle-btn" onclick="toggleEditMode()" id="edit-btn" title="Edit mode">✎ Edit</button>
     <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">☀</button>
     <button class="btn btn-primary btn-sm" onclick="quickAdd()">+ Add Class</button>
   </div>
+</div>
+
+<!-- EDIT MODE BAR -->
+<div class="edit-mode-bar" id="edit-mode-bar">
+  ✎ Edit Mode — click any text to edit it directly
+  <button class="btn btn-sm" style="margin-left:auto;background:var(--amber);color:#fff;border:none" onclick="toggleEditMode()">Done Editing</button>
 </div>
 
 <!-- PANELS -->
@@ -445,16 +603,16 @@ body.light .sync-bar{background:var(--surface2)}
   <div class="stat-grid" id="dash-stats"></div>
   <div class="grid2">
     <div>
-      <div class="section-header"><div><div class="section-title">Prerequisite Progress</div></div></div>
+      <div class="section-header"><div><div class="section-title" data-editable contenteditable="false">Prerequisite Progress</div></div></div>
       <div id="dash-prereqs"></div>
     </div>
     <div>
-      <div class="section-header"><div><div class="section-title">Current Term</div></div></div>
+      <div class="section-header"><div><div class="section-title" data-editable contenteditable="false">Current Term</div></div></div>
       <div id="dash-current-term"></div>
     </div>
   </div>
   <div style="margin-top:20px">
-    <div class="section-header"><div><div class="section-title">Upcoming Terms</div></div></div>
+    <div class="section-header"><div><div class="section-title" data-editable contenteditable="false">Upcoming Terms</div></div></div>
     <div id="dash-upcoming"></div>
   </div>
 </div>
@@ -480,6 +638,7 @@ body.light .sync-bar{background:var(--surface2)}
 <div class="panel" id="panel-classes">
   <div class="section-header">
     <div><div class="section-title">All Classes</div></div>
+    <button class="btn btn-ghost btn-sm edit-toggle-btn" onclick="toggleEditMode()" id="edit-btn" title="Edit mode">✎ Edit</button>
     <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">☀</button>
     <button class="btn btn-primary btn-sm" onclick="quickAdd()">+ Add Class</button>
   </div>
@@ -823,6 +982,9 @@ function showPanel(id) {
   activePanel = id;
   const titles = {dashboard:'Dashboard',timeline:'Timeline',terms:'Term Planner',classes:'All Classes',prereqs:'Prerequisites',checklist:'Post-Acceptance',gpa:'GPA Calculator',calendar:'Calendar & Schedule'};
   document.getElementById('page-title').textContent = titles[id] || id;
+  const mt = document.getElementById('mobile-page-title');
+  const mTitles = {dashboard:'Dashboard',terms:'Terms',classes:'Classes',prereqs:'Prereqs',checklist:'Post-Accept',gpa:'GPA',calendar:'Calendar'};
+  if(mt) mt.textContent = mTitles[id] || titles[id] || id;
   renderPanel(id);
 }
 
@@ -843,6 +1005,7 @@ function updateNavBadges() {
   document.getElementById('nb-prereqs').textContent = S.prereqs.filter(p=>p.status==='Finished').length + '/' + S.prereqs.length;
   const cl = S.checklist;
   document.getElementById('nb-checklist').textContent = cl.filter(c=>c.done).length + '/' + cl.length;
+  updateMobileNavBadges();
 }
 
 // ============================================================
@@ -1912,6 +2075,118 @@ function saveClassDetail(id) {
   saveState(); closeModalNow(); renderCalendar(); toast('Class details saved');
 }
 
+
+
+// ============================================================
+// MOBILE NAV
+// ============================================================
+function isMobile() { return window.innerWidth <= 768; }
+
+function openMobileDrawer() {
+  document.getElementById('mobile-drawer').classList.add('open');
+}
+function closeMobileDrawer() {
+  document.getElementById('mobile-drawer').classList.remove('open');
+}
+function mobileNav(id) {
+  closeMobileDrawer();
+  showPanel(id);
+  // Update bottom nav active state
+  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
+  const navMap = {dashboard:'dashboard',terms:'terms',classes:'classes',calendar:'calendar'};
+  const bottomId = navMap[id] || null;
+  if(bottomId) document.getElementById('mnav-'+bottomId)?.classList.add('active');
+  // Update mobile page title
+  const titles = {dashboard:'Dashboard',timeline:'Timeline',terms:'Terms',classes:'Classes',prereqs:'Prerequisites',checklist:'Post-Acceptance',gpa:'GPA Calc',calendar:'Calendar'};
+  const mt = document.getElementById('mobile-page-title');
+  if(mt) mt.textContent = titles[id] || id;
+}
+
+function updateMobileNavBadges() {
+  const mnbTerms = document.getElementById('mnb-terms');
+  const mnbClasses = document.getElementById('mnb-classes');
+  if(mnbTerms) mnbTerms.textContent = S.terms.length;
+  if(mnbClasses) mnbClasses.textContent = S.classes.length;
+  const syncStatus = document.getElementById('mobile-sync-status');
+  if(syncStatus && gUser) syncStatus.textContent = 'Signed in as ' + gUser.name;
+}
+
+// Sync mobile theme btn
+const origToggleTheme = toggleTheme;
+function toggleTheme() {
+  origToggleTheme();
+  const isLight = document.body.classList.contains('light');
+  const mBtn = document.getElementById('mobile-theme-btn');
+  if(mBtn) mBtn.textContent = isLight ? '☾' : '☀';
+}
+
+// Patch initTheme to also set mobile btn
+const origInitTheme = initTheme;
+function initTheme() {
+  const t = localStorage.getItem('scf_theme');
+  if(t === 'light') {
+    document.body.classList.add('light');
+    const btn = document.getElementById('theme-btn');
+    if(btn) btn.textContent = '☾';
+    const mBtn = document.getElementById('mobile-theme-btn');
+    if(mBtn) mBtn.textContent = '☾';
+  }
+}
+
+// ============================================================
+// EDIT MODE
+// ============================================================
+let editMode = false;
+
+function toggleEditMode() {
+  editMode = !editMode;
+  document.body.classList.toggle('edit-mode', editMode);
+  const bar = document.getElementById('edit-mode-bar');
+  const btn = document.getElementById('edit-btn');
+  if(bar) bar.classList.toggle('visible', editMode);
+  if(btn) {
+    btn.classList.toggle('active', editMode);
+    btn.textContent = editMode ? '✎ Editing' : '✎ Edit';
+  }
+
+  // Toggle contenteditable on all marked elements
+  document.querySelectorAll('[data-editable]').forEach(el => {
+    el.contentEditable = editMode ? 'true' : 'false';
+    if(!editMode) {
+      // Save any changes — store in localStorage keyed by data-edit-key or text
+      const key = el.dataset.editKey;
+      if(key) {
+        if(!S.editOverrides) S.editOverrides = {};
+        S.editOverrides[key] = el.textContent.trim();
+        saveState();
+      }
+    }
+  });
+
+  if(editMode) {
+    toast('Click any highlighted text to edit it', 'success');
+  } else {
+    toast('Changes saved');
+    // Re-render to pick up any edits that affect rendered content
+    renderPanel(activePanel);
+  }
+}
+
+// Apply saved edit overrides after render
+function applyEditOverrides() {
+  if(!S.editOverrides) return;
+  Object.entries(S.editOverrides).forEach(([key, val]) => {
+    const el = document.querySelector('[data-edit-key="'+key+'"]');
+    if(el) el.textContent = val;
+  });
+}
+
+// Patch showPanel to apply overrides after each render
+const _origShowPanel = showPanel;
+function showPanel(id) {
+  _origShowPanel(id);
+  setTimeout(applyEditOverrides, 50);
+}
 
 // ============================================================
 // INIT
