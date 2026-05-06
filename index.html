@@ -538,8 +538,8 @@ textarea{resize:vertical;min-height:60px}
 .signin-sub{font-size:13px;color:var(--text3);margin-bottom:24px;line-height:1.6}
 .signin-skip{font-size:12px;color:var(--text3);cursor:pointer;text-decoration:underline;margin-top:4px;display:inline-block}
 .signin-skip:hover{color:var(--text2)}
-#google-btn-static:hover{box-shadow:0 2px 8px rgba(0,0,0,0.2) !important}
-#google-btn-static:active{box-shadow:0 1px 2px rgba(0,0,0,0.1) !important;transform:scale(0.98)}
+#signin-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,0.18) !important}
+#signin-btn:active{box-shadow:0 1px 2px rgba(0,0,0,0.1) !important;transform:scale(0.98)}
 
 body.light {
   --bg: #edf0f7;
@@ -964,13 +964,12 @@ body.edit-mode [data-editable]:focus{
     <div class="signin-title">SCF Academic Planner</div>
     <div class="signin-sub">Your personal Radiography program tracker.<br>Sign in with Google to access your planner.</div>
 
-    <!-- Static button shown immediately, replaced by real GSI button once loaded -->
-    <div id="google-btn-wrap" style="display:flex;justify-content:center;margin-bottom:16px;min-height:44px">
-      <button id="google-btn-static" onclick="triggerGoogleSignin()"
+    <div style="display:flex;justify-content:center;margin-bottom:16px">
+      <button id="signin-btn" onclick="doSignIn()"
         style="display:flex;align-items:center;gap:12px;background:#fff;color:#3c4043;
-               border:1px solid #dadce0;border-radius:24px;padding:10px 24px;
+               border:1px solid #dadce0;border-radius:24px;padding:11px 24px;
                font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;
-               box-shadow:0 1px 3px rgba(0,0,0,0.12);transition:box-shadow 0.15s;
+               box-shadow:0 1px 3px rgba(0,0,0,0.12);transition:all 0.15s;
                min-width:240px;justify-content:center">
         <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
           <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
@@ -978,10 +977,8 @@ body.edit-mode [data-editable]:focus{
           <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.826.957 4.039l3.007-2.332z" fill="#FBBC05"/>
           <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
         </svg>
-        Sign in with Google
+        <span id="signin-btn-text">Sign in with Google</span>
       </button>
-      <!-- Real GSI button injected here by JS, hides static button -->
-      <div id="google-btn" style="display:none;justify-content:center"></div>
     </div>
 
     <div style="font-size:11px;color:var(--text3);text-align:center;line-height:1.7">
@@ -1122,24 +1119,100 @@ function scheduleTokenRefresh() {
 function showSigninOverlay() {
   const overlay = document.getElementById('signin-overlay');
   if(overlay) overlay.style.display = 'flex';
-  if(typeof google === 'undefined') return;
-  google.accounts.id.initialize({
-    client_id: CLIENT_ID,
-    callback: handleCredential,
-    auto_select: false,
-    cancel_on_tap_outside: false
-  });
-  const realBtn = document.getElementById('google-btn');
-  const staticBtn = document.getElementById('google-btn-static');
-  if(realBtn) realBtn.style.display = 'flex';
-  if(staticBtn) staticBtn.style.display = 'none';
-  google.accounts.id.renderButton(realBtn, {
-    theme: 'filled_black', size: 'large', text: 'signin_with', shape: 'pill', width: 240
-  });
+  setBtnState('idle');
 }
 
-function triggerGoogleSignin() {
-  if(typeof google !== 'undefined') showSigninOverlay();
+// Called when user clicks the sign-in button
+function doSignIn() {
+  if(typeof google === 'undefined') {
+    setBtnState('loading');
+    // GSI not ready yet — wait for it then try
+    const wait = setInterval(() => {
+      if(typeof google !== 'undefined') {
+        clearInterval(wait);
+        runTokenClient();
+      }
+    }, 200);
+    return;
+  }
+  runTokenClient();
+}
+
+function runTokenClient() {
+  setBtnState('loading');
+  try {
+    const tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: async (resp) => {
+        if(resp.access_token) {
+          // We have a token — now get user info via ID token
+          google.accounts.id.initialize({
+            client_id: CLIENT_ID,
+            callback: async (credResp) => {
+              const payload = JSON.parse(atob(credResp.credential.split('.')[1]));
+              gUser = { name: payload.name, email: payload.email, picture: payload.picture };
+              localStorage.setItem('scf_guser', JSON.stringify(gUser));
+              gDriveToken = resp.access_token;
+              saveTokenToSession(resp.access_token);
+              localStorage.setItem('scf_token_expiry', Date.now() + 3500000);
+              setBtnState('idle');
+              unlockApp();
+              renderSyncBar();
+              await loadFromDrive();
+              scheduleTokenRefresh();
+            },
+            auto_select: true,
+          });
+          // If we already have user info saved, skip ID token step
+          const savedUser = localStorage.getItem('scf_guser');
+          if(savedUser) {
+            try { gUser = JSON.parse(savedUser); } catch {}
+            gDriveToken = resp.access_token;
+            saveTokenToSession(resp.access_token);
+            localStorage.setItem('scf_token_expiry', Date.now() + 3500000);
+            setBtnState('idle');
+            unlockApp();
+            renderSyncBar();
+            await loadFromDrive();
+            scheduleTokenRefresh();
+          } else {
+            // Prompt for ID token to get user info
+            google.accounts.id.prompt();
+          }
+        } else {
+          setBtnState('error');
+          setTimeout(() => setBtnState('idle'), 3000);
+        }
+      }
+    });
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  } catch(e) {
+    setBtnState('error');
+    setTimeout(() => setBtnState('idle'), 3000);
+  }
+}
+
+function setBtnState(state) {
+  const btn = document.getElementById('signin-btn');
+  const txt = document.getElementById('signin-btn-text');
+  if(!btn || !txt) return;
+  if(state === 'loading') {
+    txt.textContent = 'Signing in…';
+    btn.style.opacity = '0.7';
+    btn.style.cursor = 'not-allowed';
+    btn.disabled = true;
+  } else if(state === 'error') {
+    txt.textContent = 'Try again';
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+    btn.disabled = false;
+  } else {
+    txt.textContent = 'Sign in with Google';
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+    btn.disabled = false;
+  }
 }
 
 async function trySilentAuth() {
@@ -1171,10 +1244,12 @@ async function trySilentAuth() {
 }
 
 async function handleCredential(response) {
-  const payload = JSON.parse(atob(response.credential.split('.')[1]));
-  gUser = { name: payload.name, email: payload.email, picture: payload.picture };
-  localStorage.setItem('scf_guser', JSON.stringify(gUser));
-  await getAccessToken();
+  // Updates user profile info from ID token
+  try {
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    gUser = { name: payload.name, email: payload.email, picture: payload.picture };
+    localStorage.setItem('scf_guser', JSON.stringify(gUser));
+  } catch(e) {}
 }
 
 async function getAccessToken() {
