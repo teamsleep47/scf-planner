@@ -1,7 +1,7 @@
 {
   "name": "SCF Academic Planner",
   "short_name": "SCF Planner",
-  "description": "Academic planning and prerequisite tracker for SCF Radiography program",
+  "description": "Academic planning and prerequisite tracker",
   "start_url": "/scf-planner/",
   "scope": "/scf-planner/",
   "display": "standalone",
