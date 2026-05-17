@@ -1196,20 +1196,7 @@ function initGoogleSignin() {
     scheduleTokenRefresh();
     return;
   }
-  // 2. Returning user — attempt silent redirect (prompt=none, no UI)
-  const savedUser = localStorage.getItem('scf_guser');
-  if(savedUser) {
-    try { gUser = JSON.parse(savedUser); } catch {}
-    const hint = gUser?.email || '';
-    // Store intent so on return we know it was a silent attempt
-    sessionStorage.setItem('scf_silent_attempt', '1');
-    window.location.href = buildAuthUrl({
-      prompt: 'none',
-      login_hint: hint
-    });
-    return;
-  }
-  // 3. First-time visitor — show sign-in wall
+  // 2. No token — show wall, user clicks to redirect
   showSigninOverlay();
 }
 
@@ -1254,19 +1241,11 @@ function setBtnState(state) {
 }
 
 function scheduleTokenRefresh() {
+  // Token lasts 1hr; warn at 55min
   const ts = parseInt(sessionStorage.getItem('scf_token_ts') || '0');
   const age = Date.now() - ts;
-  const refreshIn = Math.max(30000, (50 * 60 * 1000) - age);
-  setTimeout(() => {
-    // Silent redirect refresh — won't show UI if session is still valid
-    const saved = localStorage.getItem('scf_guser');
-    if(!saved) return;
-    try {
-      const hint = JSON.parse(saved).email || '';
-      sessionStorage.setItem('scf_silent_attempt', '1');
-      window.location.href = buildAuthUrl({ prompt: 'none', login_hint: hint });
-    } catch {}
-  }, refreshIn);
+  const warnIn = Math.max(0, (55 * 60 * 1000) - age);
+  if(warnIn > 0) setTimeout(() => setSyncStatus('warn','Session expiring soon'), warnIn);
 }
 
 function renderSyncBar() {
@@ -3252,6 +3231,50 @@ function saveQuickLinks() {
   renderMobileLinks();
   toast('Links saved');
 }
+
+
+// ── OAuth redirect callback handler ──────────────────────────
+window.addEventListener('load', async () => {
+  const hash = window.location.hash.substring(1);
+
+  if(hash && (hash.includes('access_token') || hash.includes('error'))) {
+    history.replaceState(null, '', window.location.pathname);
+    const params = new URLSearchParams(hash);
+    const token = params.get('access_token');
+    const error = params.get('error');
+
+    if(error || !token) {
+      showSigninOverlay();
+      if(error && error !== 'access_denied')
+        setSigninStatus('Sign-in failed (' + error + '). Try again.');
+      return;
+    }
+
+    try {
+      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
+        { headers: { Authorization: 'Bearer ' + token } });
+      const u = await res.json();
+      if(u.email) {
+        gUser = { name: u.name || u.email, email: u.email, picture: u.picture || '' };
+        localStorage.setItem('scf_guser', JSON.stringify(gUser));
+      }
+    } catch(e) {
+      const saved = localStorage.getItem('scf_guser');
+      if(saved) try { gUser = JSON.parse(saved); } catch {}
+    }
+
+    gDriveToken = token;
+    saveTokenToSession(token);
+    unlockApp();
+    renderSyncBar();
+    await loadFromDrive();
+    scheduleTokenRefresh();
+    return;
+  }
+
+  // No redirect hash — normal init
+  initGoogleSignin();
+});
 
 // ============================================================
 // INIT — app is hidden until auth passes
