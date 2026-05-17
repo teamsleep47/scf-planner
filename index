@@ -15,6 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="SCF Planner">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1165,30 +1166,13 @@ function setSyncStatus(status, msg) {
   }
 }
 
-// ── Pure redirect-based OAuth — no GSI library, no popups ──────
-// Button click → redirect to Google → Google sends token back in URL hash
-
-function buildAuthUrl(extras) {
-  const params = new URLSearchParams({
-    client_id: CLIENT_ID,
-    redirect_uri: window.location.origin + window.location.pathname,
-    response_type: 'token',
-    scope: [SCOPES,
-      'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/userinfo.email'
-    ].join(' '),
-    include_granted_scopes: 'true',
-    ...extras
-  });
-  return 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
-}
-
 function initGoogleSignin() {
-  // 1. Cached token from this session — unlock instantly
+  if(typeof google === 'undefined') { setTimeout(initGoogleSignin, 500); return; }
+  const savedUser = localStorage.getItem('scf_guser');
+  if(!savedUser) { showSigninOverlay(); return; }
+  try { gUser = JSON.parse(savedUser); } catch {}
   const cachedToken = loadTokenFromSession();
   if(cachedToken) {
-    const saved = localStorage.getItem('scf_guser');
-    if(saved) try { gUser = JSON.parse(saved); } catch {}
     gDriveToken = cachedToken;
     unlockApp();
     renderSyncBar();
@@ -1196,8 +1180,7 @@ function initGoogleSignin() {
     scheduleTokenRefresh();
     return;
   }
-  // 2. No token — show wall, user clicks to redirect
-  showSigninOverlay();
+  trySilentAuth().then(ok => { if(!ok) showSigninOverlay(); });
 }
 
 function showSigninOverlay() {
@@ -1209,11 +1192,75 @@ function showSigninOverlay() {
 
 function doSignIn() {
   setBtnState('loading');
-  setSigninStatus('Redirecting to Google…');
-  const saved = localStorage.getItem('scf_guser');
-  const extras = {};
-  if(saved) try { extras.login_hint = JSON.parse(saved).email; } catch {}
-  window.location.href = buildAuthUrl(extras);
+  if(typeof google === 'undefined') {
+    setTimeout(() => typeof google !== 'undefined' ? runTokenClient() : setBtnState('error'), 2000);
+    return;
+  }
+  runTokenClient();
+}
+
+function runTokenClient() {
+  const hasUser = !!localStorage.getItem('scf_guser');
+  try {
+    const tc = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES + ' https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+      callback: async (resp) => {
+        if(resp.access_token) {
+          gDriveToken = resp.access_token;
+          saveTokenToSession(resp.access_token);
+          try {
+            const u = await (await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
+              {headers:{Authorization:'Bearer '+resp.access_token}})).json();
+            gUser = {name:u.name,email:u.email,picture:u.picture};
+            localStorage.setItem('scf_guser', JSON.stringify(gUser));
+          } catch(e) {
+            const s = localStorage.getItem('scf_guser');
+            if(s) try { gUser = JSON.parse(s); } catch {}
+          }
+          setBtnState('idle');
+          unlockApp();
+          renderSyncBar();
+          await loadFromDrive();
+          scheduleTokenRefresh();
+        } else { setBtnState('error'); setTimeout(()=>setBtnState('idle'),3000); }
+      }
+    });
+    tc.requestAccessToken({prompt: hasUser ? '' : 'select_account'});
+  } catch(e) { setBtnState('error'); setTimeout(()=>setBtnState('idle'),3000); }
+}
+
+async function trySilentAuth() {
+  return new Promise(resolve => {
+    if(typeof google === 'undefined') { resolve(false); return; }
+    try {
+      const tc = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES + ' https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+        prompt: '',
+        callback: async (resp) => {
+          if(resp.access_token) {
+            gDriveToken = resp.access_token;
+            saveTokenToSession(resp.access_token);
+            unlockApp();
+            renderSyncBar();
+            await loadFromDrive();
+            scheduleTokenRefresh();
+            resolve(true);
+          } else { resolve(false); }
+        }
+      });
+      tc.requestAccessToken({prompt:''});
+    } catch(e) { resolve(false); }
+  });
+}
+
+function handleCredential(r) {
+  try {
+    const p = JSON.parse(atob(r.credential.split('.')[1]));
+    gUser = {name:p.name,email:p.email,picture:p.picture};
+    localStorage.setItem('scf_guser', JSON.stringify(gUser));
+  } catch(e) {}
 }
 
 function setSigninStatus(msg) {
@@ -1224,28 +1271,24 @@ function setSigninStatus(msg) {
 function setBtnState(state) {
   const btn = document.getElementById('signin-btn');
   const txt = document.getElementById('signin-btn-text');
-  if(!btn || !txt) return;
-  if(state === 'loading') {
-    txt.textContent = 'Redirecting…';
-    btn.style.opacity = '0.7';
-    btn.disabled = true;
-  } else if(state === 'error') {
-    txt.textContent = 'Try again';
-    btn.style.opacity = '1';
-    btn.disabled = false;
-  } else {
-    txt.textContent = 'Continue with Google';
-    btn.style.opacity = '1';
-    btn.disabled = false;
-  }
+  if(!btn||!txt) return;
+  if(state==='loading') { txt.textContent='Signing in…'; btn.style.opacity='0.7'; btn.disabled=true; }
+  else if(state==='error') { txt.textContent='Try again'; btn.style.opacity='1'; btn.disabled=false; }
+  else { txt.textContent='Sign in with Google'; btn.style.opacity='1'; btn.disabled=false; }
 }
 
 function scheduleTokenRefresh() {
-  // Token lasts 1hr; warn at 55min
-  const ts = parseInt(sessionStorage.getItem('scf_token_ts') || '0');
-  const age = Date.now() - ts;
-  const warnIn = Math.max(0, (55 * 60 * 1000) - age);
-  if(warnIn > 0) setTimeout(() => setSyncStatus('warn','Session expiring soon'), warnIn);
+  const ts = parseInt(sessionStorage.getItem('scf_token_ts')||'0');
+  const age = Date.now()-ts;
+  const refreshIn = Math.max(0,(50*60*1000)-age);
+  setTimeout(()=>trySilentAuth(), refreshIn);
+}
+
+function signOut() {
+  gDriveToken=null; gUser=null; gDriveFileId=null;
+  localStorage.removeItem('scf_guser');
+  clearSessionToken();
+  location.reload();
 }
 
 function renderSyncBar() {
@@ -1259,14 +1302,7 @@ function renderSyncBar() {
   if(mStatus) mStatus.innerHTML = '<span style="color:var(--green)">● Synced</span> · ' + (gUser.name||gUser.email||'');
 }
 
-function signOut() {
-  gDriveToken = null; gUser = null; gDriveFileId = null;
-  localStorage.removeItem('scf_guser');
-  clearSessionToken();
-  // Redirect to Google sign-out then back to our sign-in page
-  const returnUrl = encodeURIComponent(window.location.origin + window.location.pathname);
-  window.location.href = 'https://accounts.google.com/logout?continue=' + returnUrl;
-}
+
 
 function skipSignin() { /* disabled — sign-in required */ }
 
@@ -3233,46 +3269,7 @@ function saveQuickLinks() {
 }
 
 
-// ── OAuth redirect callback handler ──────────────────────────
-window.addEventListener('load', async () => {
-  const hash = window.location.hash.substring(1);
-
-  if(hash && (hash.includes('access_token') || hash.includes('error'))) {
-    history.replaceState(null, '', window.location.pathname);
-    const params = new URLSearchParams(hash);
-    const token = params.get('access_token');
-    const error = params.get('error');
-
-    if(error || !token) {
-      showSigninOverlay();
-      if(error && error !== 'access_denied')
-        setSigninStatus('Sign-in failed (' + error + '). Try again.');
-      return;
-    }
-
-    try {
-      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
-        { headers: { Authorization: 'Bearer ' + token } });
-      const u = await res.json();
-      if(u.email) {
-        gUser = { name: u.name || u.email, email: u.email, picture: u.picture || '' };
-        localStorage.setItem('scf_guser', JSON.stringify(gUser));
-      }
-    } catch(e) {
-      const saved = localStorage.getItem('scf_guser');
-      if(saved) try { gUser = JSON.parse(saved); } catch {}
-    }
-
-    gDriveToken = token;
-    saveTokenToSession(token);
-    unlockApp();
-    renderSyncBar();
-    await loadFromDrive();
-    scheduleTokenRefresh();
-    return;
-  }
-
-  // No redirect hash — normal init
+window.addEventListener('load', () => {
   initGoogleSignin();
 });
 
